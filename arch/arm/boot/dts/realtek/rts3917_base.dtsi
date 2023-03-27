@@ -1,0 +1,1078 @@
+/dts-v1/;
+
+#include <dt-bindings/reset/rts-resets.h>
+#include <dt-bindings/reset/rts-sysmem.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+#include <dt-bindings/clock/rts3917-clock.h>
+#include <dt-bindings/interrupt-controller/realtek,rts3917.h>
+#include <dt-bindings/gpio/realtek,rts3917.h>
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	compatible = "realtek,rts3917";
+	#address-cells = <1>;
+	#size-cells = <1>;
+	interrupt-parent = <&gic>;
+
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		video_reserved: videomem {
+		};
+
+		audio_reserved: audiomem {
+			compatible = "shared-dma-pool";
+		};
+
+		fb_reserved: fbmem { // memory for ssi drm driver
+			compatible = "shared-dma-pool";
+			size = <0x1000000>;
+			alloc-ranges = <0x80d40000 0x72C0000>;
+			reusable;
+		};
+
+		linux_cma: cma {
+			compatible = "shared-dma-pool";
+		};
+	};
+
+	video-buffer-config {
+		icfg {
+			icfg0: icfg@0 {
+				#address-cells = <1>;
+				#size-cells = <1>;
+				y {
+					reg = <0x0 0x180>;
+				};
+				uv {
+					reg = <0x180 0x180>;
+				};
+			};
+			icfg1: icfg@1 {
+				#address-cells = <1>;
+				#size-cells = <1>;
+				y {
+					reg = <0x300 0xc0>;
+				};
+				uv {
+					reg = <0x3c0 0xc0>;
+				};
+			};
+			icfg2: icfg@2 {
+				#address-cells = <1>;
+				#size-cells = <1>;
+				y {
+					reg = <0x480 0x60>;
+				};
+				uv {
+					reg = <0x4e0 0x60>;
+				};
+			};
+			icfg3: icfg@3 {
+				#address-cells = <1>;
+				#size-cells = <1>;
+				y {
+					reg = <0x540 0x60>;
+				};
+				uv {
+					reg = <0x5a0 0x60>;
+				};
+			};
+		};
+
+		fcfg {
+			#address-cells = <1>;
+			#size-cells = <1>;
+			osd2cfg: fcfg@1 {
+				reg = <0x0 0x200>;
+			};
+			statiscfg: fcfg@2 {
+				reg = <0x200 0x200>;
+			};
+			md0cfg: fcfg@3 {
+				reg = <0x400 0x800>;
+			};
+			md1cfg: fcfg@4 {
+				reg = <0xc00 0x200>;
+			};
+			rcfg: fcfg@5 {
+				reg = <0xe00 0x600>;
+			};
+			gcfg: fcfg@6 {
+				reg = <0x1400 0x600>;
+			};
+			bcfg: fcfg@7 {
+				reg = <0x1a00 0x600>;
+			};
+		};
+	};
+
+	rtsmem: rts_isp_mem {
+		compatible = "realtek,rts3917-ispmem";
+		memory-region = <&video_reserved>;
+	};
+
+	audio_mono_mode: audio_mono_mode {
+		mono-in = "left-channel";
+		mono-out = "left-channel";
+	};
+
+	clocks {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		soc_clk25mhz: oscillator {
+			compatible = "fixed-clock";
+			clock-output-names = "clk25mhz";
+			clock-frequency = <25000000>;
+			#clock-cells = <0>;
+		};
+	};
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu@0 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a7";
+			clock-frequency = <800000000>;
+			reg = <0x0>;
+			clocks = <&clks RLX_CLK_CPU_CK>;
+			operating-points = <
+			/*kHz uV*/
+			800000 0
+			600000 0
+			400000 0
+			160000 0
+			>;
+		};
+	};
+
+	gic: interrupt-controller@19280000 {
+		compatible = "arm,cortex-a7-gic";
+		interrupt-controller;
+		#interrupt-cells = <3>;
+		#address-cells = <0>;
+		reg = <0x19281000 0x1000>,  //GIC Distributor register base
+		      <0x19282000 0x2000>;  //GIC CPU interface register base
+	};
+
+	timer {
+		compatible = "arm,armv7-timer";
+		clock-frequency = <25000000>;
+		interrupts = <GIC_PPI 13 (GIC_CPU_MASK_SIMPLE(1) | IRQ_TYPE_LEVEL_LOW)>,
+			     <GIC_PPI 14 (GIC_CPU_MASK_SIMPLE(1) | IRQ_TYPE_LEVEL_LOW)>,
+			     <GIC_PPI 11 (GIC_CPU_MASK_SIMPLE(1) | IRQ_TYPE_LEVEL_LOW)>,
+			     <GIC_PPI 10 (GIC_CPU_MASK_SIMPLE(1) | IRQ_TYPE_LEVEL_LOW)>;
+	};
+
+	aliases {
+		serial0 = &uart0;
+		serial1 = &uart1;
+		serial2 = &uart2;
+	};
+
+	leds: gpio-leds {
+		compatible = "gpio-leds";
+	};
+
+	soc {
+		compatible = "sheipa-bus", "simple-bus";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		xb2: xb2@18870000 {
+			compatible = "realtek,rts3917-xb2";
+			reg = <0x18870000 0x30>, <0x1886f000 0x20>;
+			interrupts = <GIC_SPI BSP_IRQ_OTHER IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-parent = <&gic>;
+		};
+
+		ddrc: ddrc@18010000 {
+			compatible = "realtek,rts3917-ddrc";
+			reg = <0x18010000 0x100>, <0x18080000 0x100>;
+			status = "disabled";
+		};
+
+		reset: reset-controller@188d8000 {
+			compatible = "realtek,rts3917-reset";
+			reg = <0x188d8000 0x1000>;
+			#reset-cells = <1>;
+		};
+
+		sysmem: reset-controller@188c0000 {
+			compatible = "realtek,rts3917-sysmem";
+			reg = <0x188c0000 0x1000>;
+			#reset-cells = <1>;
+		};
+
+		clks: clks@188d0000  {
+			compatible = "realtek,rts3917-clocks";
+			#clock-cells = <1>;
+			reg = <0x188d0000 0x1000>, <0x188b0000 0x400>;
+		};
+
+		eth0: rtl8168@18400000 {
+			compatible = "realtek,rts3917-r8168";
+			reg = <0x18400000 0x1000>, <0x18862000 0x1000>;
+			interrupt-parent = <&gic>;
+			interrupts = <GIC_SPI BSP_IRQ_ETH IRQ_TYPE_LEVEL_HIGH>;
+			resets = <&reset FORCE_RESET_ETHERNET>,            \
+					<&reset FORCE_RESET_FEPHY>, \
+					<&sysmem SYS_MEM_SD_ETH>;
+			reset-names = "eth-reset", "fephy-reset", "eth-mem-up";
+			status = "disabled";
+		};
+
+		spi0: spic@18030000 {
+			compatible = "realtek,rts3917-quadspi";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			bus_num = <0>;
+			reg = <0x18030000 0x10000>, <0x18860080 0x28>;
+			clocks = <&clks RLX_CLK_DRAM_CK>;
+			clock-names = "spi_ck";
+			spi-deactivate-delay = <0>;
+			spi-max-frequency = <30000000>;
+			spi-transfer-channel = "dual";
+			interrupt-parent = <&gic>;
+			interrupts = <GIC_SPI BSP_IRQ_SPI_NOR IRQ_TYPE_LEVEL_HIGH>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&spi_default_mode>;
+			status = "disabled";
+		};
+
+		spi1: spi@19210000 {
+			compatible = "realtek,dw-apb-ssi";
+			reg = <0x19210000 0x10000>, <0x18870070 0x20>;
+			clocks = <&clks RLX_CLK_SSI_CK>;
+			clock-names = "ssi_ck";
+			interrupt-parent = <&gic>;
+			interrupts = <GIC_SPI BSP_IRQ_SSI IRQ_TYPE_LEVEL_HIGH>;
+			num-cs = <2>;
+			dma_transfer = <1>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&ssi_default_mode>;
+			status = "disabled";
+
+			drm-ssi-lcd@0 {
+				compatible = "rts-st7789_444", "panel-mipi-dbi-spi";
+				pixel-format = "RGB444";
+				spi-max-frequency = <40000000>;
+				reg = <0>;
+
+				width-mm = <37>;
+				height-mm = <49>;
+
+				memory-region = <&fb_reserved>;
+				dc-gpios = <&pinctrl 4 GPIO_ACTIVE_HIGH>;
+				reset-gpios = <&pinctrl 5 GPIO_ACTIVE_HIGH>;
+				write-only;
+
+				panel-timing {
+					hactive = <240>;
+					vactive = <320>;
+					hback-porch = <0>;
+					vback-porch = <0>;
+
+					clock-frequency = <0>;
+					hfront-porch = <0>;
+					hsync-len = <0>;
+					vfront-porch = <0>;
+					vsync-len = <0>;
+				};
+			};
+		};
+
+		usb_ehci: usb_ehci@18100000 {
+			compatible = "realtek,rts3917-ehci";
+			reg = <0x18100000 0x1000>;
+			interrupts = <GIC_SPI BSP_IRQ_EHCI IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-parent = <&gic>;
+			resets = <&reset FORCE_RESET_U2HOST>;
+			reset-names = "reset-usb-host";
+			pinctrl-names = "default";
+			pinctrl-0 = <&usbh_default_mode>;
+			status = "disabled";
+		};
+
+		usb_ohci: usb_ohci@18180000 {
+			compatible = "realtek,rts3917-ohci";
+			reg = <0x18180000 0x1000>;
+			interrupts = <GIC_SPI BSP_IRQ_OHCI IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-parent = <&gic>;
+			resets = <&reset FORCE_RESET_U2HOST>;
+			reset-names = "reset-usb-host";
+			pinctrl-names = "default";
+			pinctrl-0 = <&usbh_default_mode>;
+			status = "disabled";
+		};
+
+		usb_device: usb_device@18290000 {
+			compatible = "realtek,rts3917-usb-device";
+			reg = <0x18290000 0x900>, <0x18280000 0x2000>;
+			interrupts =	\
+				<GIC_SPI BSP_IRQ_USB_DEV IRQ_TYPE_LEVEL_HIGH>,
+				<GIC_SPI BSP_IRQ_USB_PHY IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-parent = <&gic>;
+			resets = <&reset FORCE_RESET_U2DEV>,	\
+				 <&sysmem SYS_MEM_SD_U2DEV>;
+			reset-names = "reset-usb-device", "u2dev-sysmem-up";
+			pinctrl-names = "default";
+			pinctrl-0 = <&usbd_default_mode>;
+			status = "disabled";
+		};
+
+		usb_phy: usb_phy@18140000 {
+			compatible = "realtek,rts3917-usbphy";
+			reg = <0x18140000 0x1000>;
+			interrupts =	\
+				<GIC_SPI BSP_IRQ_USB_PHY IRQ_TYPE_LEVEL_HIGH>;
+			host-sens-obj = <7>;
+			host-sens-chirp = <10>;
+			dev-sens-obj = <0>;
+			dev-sens-normal = <7>;
+			status = "disabled";
+		};
+
+		sdhc0: mmc_sdhc@18300000 {
+			compatible = "realtek,rts3917-sdhc";
+			reg = <0x18300000 0x100000>;
+			interrupts = <GIC_SPI BSP_IRQ_SDIO0 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-parent = <&gic>;
+			clock-names = "sd_crc_ck", "sd_sample_ck", "sd_push_ck";
+			clocks = <&clks RLX_CLK_SD0_CRC_CK>,	\
+				 <&clks RLX_CLK_SD0_SAMPLE_CK>,	\
+				 <&clks RLX_CLK_SD0_PUSH_CK>;
+			resets = <&reset FORCE_RESET_SDIO0>,    \
+				<&sysmem SYS_MEM_SD_SDIO0>;
+			reset-names = "reset-sd-device", "sdio-sysmem-up";
+			pinctrl-names = "default", "pullup", "pulldown";
+			pinctrl-0 = <&sdhc0_default_mode>;
+			pinctrl-1 = <&sdhc0_pullup_mode>;
+			pinctrl-2 = <&sdhc0_pulldown_mode>;
+			disable-wp;
+			cd-inverted;
+			bus-width = <4>;
+			cap-sd-highspeed;
+			cap-mmc-highspeed;
+			status = "disabled";
+		};
+
+		sdhc1: mmc_sdhc@18700000 {
+			compatible = "realtek,rts3917-sdhc";
+			reg = <0x18700000 0x100000>;
+			interrupts = <GIC_SPI BSP_IRQ_SDIO1 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-parent = <&gic>;
+			clock-names = "sd_crc_ck", "sd_sample_ck", "sd_push_ck";
+			clocks = <&clks RLX_CLK_SD1_CRC_CK>,	\
+				 <&clks RLX_CLK_SD1_SAMPLE_CK>,	\
+				 <&clks RLX_CLK_SD1_PUSH_CK>;
+			resets = <&reset FORCE_RESET_SDIO1>,    \
+				 <&sysmem SYS_MEM_SD_SDIO1>;
+			reset-names = "reset-sd-device", "sdio-sysmem-up";
+			pinctrl-names = "default", "pullup", "pulldown";
+			pinctrl-0 = <&sdhc1_default_mode>;
+			pinctrl-1 = <&sdhc1_pullup_mode>;
+			pinctrl-2 = <&sdhc1_pulldown_mode>;
+			disable-wp;
+			cd-inverted;
+			bus-width = <4>;
+			cap-sd-highspeed;
+			cap-mmc-highspeed;
+			status = "disabled";
+		};
+
+		uart0: serial@18810000 {
+			compatible = "realtek,rts-uart";
+			reg = <0x18810000 0x100>;
+			interrupts = <GIC_SPI BSP_IRQ_UART0 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-parent = <&gic>;
+			reg-shift = <2>;
+			reg-io-width = <4>;
+			current-speed = <57600>;
+			clocks = <&clks RLX_CLK_UART_CK>;
+			clock-frequency = <24000000>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&uart0_default_mode>;
+			status = "disabled";
+		};
+
+		uart1: serial@18810100 {
+			compatible = "realtek,rts-uart";
+			reg = <0x18810100 0x100>;
+			interrupts = <GIC_SPI BSP_IRQ_UART1 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-parent = <&gic>;
+			reg-shift = <2>;
+			reg-io-width = <4>;
+			current-speed = <57600>;
+			no-loopback-test;
+			clocks = <&clks RLX_CLK_UART1_CK>;
+			clock-frequency = <24000000>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&uart1_default_mode>;
+			status = "disabled";
+		};
+
+		uart2: serial@18810200 {
+			compatible = "realtek,rts-uart";
+			reg = <0x18810200 0x100>;
+			interrupts = <GIC_SPI BSP_IRQ_UART2 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-parent = <&gic>;
+			reg-shift = <2>;
+			reg-io-width = <4>;
+			current-speed = <57600>;
+			clocks = <&clks RLX_CLK_UART2_CK>;
+			clock-frequency = <24000000>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&uart2_default_mode>;
+			status = "disabled";
+		};
+
+		i2c0: i2c@18880000 {
+			compatible = "realtek,rts3917-i2c";
+			reg = <0x18880000 0x1000>;
+			interrupts = <GIC_SPI BSP_IRQ_I2C0 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-parent = <&gic>;
+			clocks = <&clks RLX_CLK_I2C_CK>;
+			clock-names = "i2c_ck";
+			resets = <&reset FORCE_RESET_I2C0>;
+			reset-names = "reset-i2c";
+			pinctrl-names = "default";
+			pinctrl-0 = <&i2c0_default_mode>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		i2c1: i2c@18881000 {
+			compatible = "realtek,rts3917-i2c";
+			reg = <0x18881000 0x1000>;
+			interrupts = <GIC_SPI BSP_IRQ_I2C1 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-parent = <&gic>;
+			clocks = <&clks RLX_CLK_I2C1_CK>;
+			clock-names = "i2c_ck";
+			resets = <&reset FORCE_RESET_I2C1>;
+			reset-names = "reset-i2c";
+			pinctrl-names = "default";
+			pinctrl-0 = <&i2c1_default_mode>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		pwm: pwm@18820000 {
+			compatible = "realtek,rts3917-pwm";
+			reg = <0x18820000 0x10000>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pwm_default_mode>;
+			status = "disabled";
+		};
+
+		watchdog: watchdog@188da000 {
+			compatible = "realtek,rts3917-wd";
+			reg = <0x188da000 0x10000>;
+			status = "disabled";
+		};
+
+		rtc: rtc@18850000 {
+			compatible = "realtek,rts3917-rtc";
+			reg = <0x18850000 0x1000>;
+			interrupts = <GIC_SPI BSP_IRQ_OTHER IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-parent = <&gic>;
+			status = "disabled";
+		};
+
+		thermal: thermal@188a0200 {
+			compatible = "realtek,rts3917-tm";
+			reg = <0x188a0200 0x100>;
+			interrupts = \
+				<GIC_SPI BSP_IRQ_THERMAL IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-parent = <&gic>;
+			num-trips = <2>;
+			trip0-temp = <7500>;
+			trip1-temp = <8500>;
+			thermal_k = /bits/ 32 <26815 27315 27815 28315 28815
+				29315 29815 30315 30815 31315 31815 32315 32815
+				33315 33815 34315 34815 35315>;
+			status = "disabled";
+		};
+
+		saradc: saradc@18840000 {
+			compatible = "realtek,rts3917-saradc";
+			reg = <0x18840000 0x10000>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&saradc_default_mode>;
+			status = "disabled";
+		};
+
+		rts_timer0: rts_timer@18890000 {
+			compatible = "realtek,rts3917-timer";
+			reg = <0x18890000 0x100>;
+			io-gpio = <&pinctrl 14 GPIO_ACTIVE_HIGH>;
+			interrupts = \
+				<GIC_SPI BSP_IRQ_TIMER0 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-parent = <&gic>;
+			status = "disabled";
+		};
+
+		rts_timer1: rts_timer@18891000 {
+			compatible = "realtek,rts3917-timer";
+			reg = <0x18891000 0x100>;
+			io-gpio = <&pinctrl 15 GPIO_ACTIVE_HIGH>;
+			interrupts = \
+				<GIC_SPI BSP_IRQ_TIMER1 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-parent = <&gic>;
+			status = "disabled";
+		};
+
+		pinctrl: pinctrl@18800000 {
+			#address-cells = <1>;
+			#size-cells = <1>;
+			ranges;
+			compatible = "realtek,rts3917-pinctrl";
+			reg = <0x18800000 0x10000>;
+			interrupts = <GIC_SPI BSP_IRQ_GPIO IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-parent = <&gic>;
+			pwm-etnled-mapping = /bits/ 32 <0 1 2 0>;
+			gpio-controller;
+			#gpio-cells = <2>;
+			gpio-numbers = <RTS_NUM_GPIOS>;
+			status = "disabled";
+
+			i2c0_default_mode: i2c0_default {
+				default_mux {
+					function = "i2cfunc";
+					groups = "i2c0grp";
+				};
+			};
+
+			i2c1_default_mode: i2c1_default {
+				default_mux {
+					function = "i2cfunc";
+					groups = "i2c1grp";
+				};
+			};
+
+			h265_uart_default_mode: h265_uart_default {
+				default_mux {
+					function = "h265uartfunc";
+					groups = "h265uartgrp";
+				};
+			};
+
+			uart0_default_mode: uart0_default {
+				default_mux {
+					function = "uartfunc";
+					groups = "uart0grp";
+				};
+			};
+
+			uart1_default_mode: uart1_default {
+				default_mux {
+					function = "uartfunc";
+					groups = "uart1grp";
+				};
+			};
+
+			uart2_default_mode: uart2_default {
+				default_mux {
+					function = "uartfunc";
+					groups = "uart2grp";
+				};
+			};
+
+			sdhc0_default_mode: sdhc0_default {
+				default_mux {
+					function = "sdio0func";
+					groups = "sdio0grp", "sdio0cdgrp",
+						"sdio0wpgrp";
+				};
+			};
+
+			sdhc0_pullup_mode: sdhc0_pullup {
+				default_mux {
+					function = "sdio0func";
+					groups = "sdio0grp", "sdio0cdgrp",
+						"sdio0wpgrp";
+				};
+				pullup_cfg0 {
+					pins = "SDIO0_CMD", "SDIO0_DATA3",
+						"SDIO0_DATA2", "SDIO0_DATA1",
+						"SDIO0_DATA0";
+					bias-pull-up;
+					drive-strength = <8>;
+				};
+				pullup_cfg1 {
+					pins = "SDIO0_CD", "SDIO0_WP";
+					bias-pull-up;
+					drive-strength = <4>;
+				};
+				pullup_cfg2 {
+					pins = "SDIO0_CLK";
+					bias-pull-down;
+					drive-strength = <8>;
+				};
+			};
+
+			sdhc0_pulldown_mode: sdhc0_pulldown {
+				default_mux {
+					function = "sdio0func";
+					groups = "sdio0grp", "sdio0cdgrp",
+						"sdio0wpgrp";
+				};
+				pulldown_cfg0 {
+					pins = "SDIO0_CD";
+					bias-pull-up;
+					drive-strength = <4>;
+				};
+				pulldown_cfg1 {
+					pins = "SDIO0_WP";
+					bias-pull-down;
+					drive-strength = <4>;
+				};
+				pulldown_cfg2 {
+					pins = "SDIO0_CMD", "SDIO0_DATA3",
+						"SDIO0_DATA2", "SDIO0_DATA1",
+						"SDIO0_DATA0", "SDIO0_CLK";
+					bias-pull-down;
+					drive-strength = <8>;
+				};
+			};
+
+			sdhc1_default_mode: sdhc1_default {
+				default_mux {
+					function = "sdio1func";
+					groups = "sdio1grp", "sdio1cdgrp",
+						"sdio1wpgrp";
+				};
+			};
+
+			sdhc1_pullup_mode: sdhc1_pullup {
+				default_mux {
+					function = "sdio1func";
+					groups = "sdio1grp", "sdio1cdgrp",
+						"sdio1wpgrp";
+				};
+				pullup_cfg0 {
+					pins = "SDIO1_CMD", "SDIO1_DATA3",
+						"SDIO1_DATA2", "SDIO1_DATA1",
+						"SDIO1_DATA0";
+					bias-pull-up;
+					drive-strength = <8>;
+				};
+				pullup_cfg1 {
+					pins = "SDIO1_CD", "SDIO1_WP";
+					bias-pull-up;
+					drive-strength = <4>;
+				};
+				pullup_cfg2 {
+					pins = "SDIO1_CLK";
+					bias-pull-down;
+					drive-strength = <8>;
+				};
+			};
+
+			sdhc1_pulldown_mode: sdhc1_pulldown {
+				default_mux {
+					function = "sdio1func";
+					groups = "sdio1grp", "sdio1cdgrp",
+						"sdio1wpgrp";
+				};
+				pulldown_cfg0 {
+					pins = "SDIO1_CD";
+					bias-pull-up;
+					drive-strength = <4>;
+				};
+				pulldown_cfg1 {
+					pins = "SDIO1_WP";
+					bias-pull-down;
+					drive-strength = <4>;
+				};
+				pulldown_cfg2 {
+					pins = "SDIO1_CMD", "SDIO1_DATA3",
+						"SDIO1_DATA2", "SDIO1_DATA1",
+						"SDIO1_DATA0", "SDIO1_CLK";
+					bias-pull-down;
+					drive-strength = <8>;
+				};
+			};
+
+			audio_default_mode: audio_default {
+				default_mux {
+					function = "audiofunc";
+					groups = "default";
+				};
+			};
+
+			audio_amic_mode: audio_amic {
+				default_mux {
+					function = "audiofunc";
+					groups = "amicgrp", "lineoutgrp",
+						"dmic1grp", "dmic2grp";
+				};
+				default_cfg {
+					pins = "MIC_INL", "MIC_INR",
+						"LINE_OUTL", "LINE_OUTR";
+					bias-disable;
+				};
+			};
+
+			audio_dmic_mode: audio_dmic {
+				default_mux {
+					function = "audiofunc";
+					groups = "dmicgrp", "lineoutgrp";
+				};
+				default_cfg {
+					pins = "MIC_INL", "MIC_INR",
+						"LINE_OUTL", "LINE_OUTR";
+					bias-disable;
+				};
+			};
+
+			usbd_default_mode: usbd_default {
+				default_mux {
+					function = "usbdfunc";
+					groups = "usbdgrp";
+				};
+			};
+
+			usbh_default_mode: usbh_default {
+				default_mux {
+					function = "usbhfunc";
+					groups = "usbhgrp";
+				};
+			};
+
+			eth_default_mode: eth_default {
+				default_mux {
+					function = "etnledfunc";
+				};
+			};
+
+			pwm_default_mode: pwm_default {
+				default_mux {
+					function = "pwmfunc";
+					groups = "pwm0grp","pwm1grp",
+						"pwm2grp","pwm3grp";
+				};
+			};
+
+			sensor_default_mode: sensor_default {
+				default_mux {
+					function = "ssorfunc";
+					groups = "default";
+				};
+			};
+
+			sensor_dvp_mode: sensor_dvp {
+				dvp_mux {
+					function = "ssorfunc";
+					groups = "dvpgrp";
+				};
+			};
+
+			sensor_mipi_mode: sensor_mipi {
+				mipi_mux {
+					function = "ssorfunc";
+					groups = "mipigrp";
+				};
+			};
+
+			ssi_default_mode: ssi_default {
+				default_mux {
+					function = "ssifunc";
+					groups = "ssigrp";
+				};
+			};
+
+			spi_default_mode: spi_default {
+				default_mux {
+					function = "spifunc";
+					groups = "spigrp";
+				};
+			};
+
+			saradc_default_mode: saradc_default {
+				default_mux {
+					function = "saradcfunc";
+					groups = "saradc0grp", "saradc1grp",
+						 "saradc2grp", "saradc3grp";
+				};
+				default_cfg {
+					pins = "CH_SAR_PAD0", "CH_SAR_PAD1",
+					       "CH_SAR_PAD2", "CH_SAR_PAD3";
+					bias-disable;
+				};
+			};
+		};
+
+		rts_isp: rts_isp@18a00000 {
+			compatible = "realtek,rts3917-isp";
+			reg = <0x18a00000 0xd8000>;
+			clock-names = "isp_clk", \
+				      "inf_clk", \
+				      "mipiout_clk", \
+				      "hclk";
+			clocks = <&clks RLX_CLK_ISP_CK>, \
+				 <&clks RLX_CLK_MIPI_CK>, \
+				 <&clks RLX_CLK_MIPITX>, \
+				 <&clks RLX_CLK_SSOR_HCLK>;
+			interrupt-parent = <&gic>;
+			interrupts = <GIC_SPI BSP_IRQ_ISP IRQ_TYPE_LEVEL_HIGH>;
+			reset-names = "isp_reset", \
+				      "mipi_reset", \
+				      "mipiout_reset", \
+				      "isp-sysmem-up", \
+				      "mipiout_sysmem_up";
+			resets = <&reset FORCE_RESET_ISP>, \
+				 <&reset FORCE_RESET_MIPI>, \
+				 <&reset FORCE_RESET_MIPI_TX>, \
+				 <&sysmem SYS_ISP_MEM>, \
+				 <&sysmem SYS_MEM_SD_MIPITX>;
+			/* power-domains = <&power RTS_PD_TOP_OFF>; */
+			pinctrl-names = "default", "dvp", "mipi";
+			pinctrl-0 = <&sensor_default_mode>;
+			pinctrl-1 = <&sensor_dvp_mode>;
+			pinctrl-2 = <&sensor_mipi_mode>;
+			video-i2c = <&i2c1>;
+			statis_cfg = <&statiscfg>;
+			tnr-bit = <8>;
+			status = "disabled";
+		};
+
+		rts_zoom: rts_zoom@18ad8000 {
+			compatible = "realtek,rts3917-zoom";
+			reg = <0x18ad8000 0x8000>;
+			clock-names = "zoom_clk";
+			clocks = <&clks RLX_CLK_ISP_ZOOM_CK>;
+			reset-names = "zoom_reset";
+			resets = <&reset FORCE_RESET_ZOOM>;
+			status = "disabled";
+		};
+
+		rts_md: rts_md@18adf000 {
+			compatible = "realtek,rts3917-md";
+			reg = <0x18adf000 0x1000>;
+			interrupt-parent = <&gic>;
+			interrupts = <GIC_SPI BSP_IRQ_MD IRQ_TYPE_LEVEL_HIGH>;
+			md_cfg = <&md0cfg>, <&md1cfg>;
+			status = "disabled";
+		};
+
+		rts_soc_camera: rts_soc_camera@18af0000 {
+			compatible = "realtek,rts3917-videoin";
+			reg = <0x18af0000 0x00000400>;
+			interrupt-parent = <&gic>;
+			interrupts = <GIC_SPI BSP_IRQ_VIDEO IRQ_TYPE_LEVEL_HIGH>;
+			isp-buffer-config = <&icfg0>, <&icfg1>, \
+						<&icfg2>, <&icfg3>;
+			rgb-buffer-config = <&rcfg>, <&gcfg>, <&bcfg>;
+			resets = <&reset FORCE_RESET_VIDEO>, \
+				 <&sysmem SYS_VIDEO_MEM>;
+			reset-names = "video", "video-sysmem-up";
+
+			status = "disabled";
+		};
+
+		rts_osd_enc: rts_osd2@18ae0000 {
+			compatible = "realtek,rts3917-osd2";
+			reg = <0x18ae0000 0x00001ffd>;
+			interrupt-parent = <&gic>;
+			interrupts = <GIC_SPI BSP_IRQ_OSD IRQ_TYPE_LEVEL_HIGH>;
+			reset-names = "osd_reset";
+			resets = <&reset FORCE_RESET_OSD>;
+			osd-config = <&osd2cfg>;
+			status = "disabled";
+		};
+
+		rts_osdi: rts_osdi@18af4000 {
+			compatible = "realtek,rts3917-osdi";
+			reg = <0x18af4000 0x00004000>;
+			interrupt-parent = <&gic>;
+			interrupts = <GIC_SPI BSP_IRQ_OSDI0 IRQ_TYPE_LEVEL_HIGH>,
+				<GIC_SPI BSP_IRQ_OSDI1 IRQ_TYPE_LEVEL_HIGH>,
+				<GIC_SPI BSP_IRQ_OSDI2 IRQ_TYPE_LEVEL_HIGH>,
+				<GIC_SPI BSP_IRQ_OSDI3 IRQ_TYPE_LEVEL_HIGH>;
+			status = "disabled";
+		};
+
+		rts_h265: rts_h265_vpucodec@180c0000 {
+			compatible = "realtek,rts3917-vpucodec";
+			reg = <0x180c0000 0x00001050>, <0x180f0000 0xff>;
+			interrupt-parent = <&gic>;
+			interrupts = <GIC_SPI BSP_IRQ_H265 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&clks RLX_CLK_H265_CK>, \
+					<&clks RLX_CLK_H265_ACLK_CK>, \
+					<&clks RLX_CLK_H265_BCLK_CK>, \
+					<&clks RLX_CLK_H265_CCLK_CK>;
+			clock-names = "h265_ck", "h265_aclk_ck", \
+					"h265_bclk_ck", "h265_cclk_ck";
+			h265-bclk-frequency = <240000000>;
+			h265-cclk-frequency = <240000000>;
+			resets = <&reset FORCE_RESET_H265_AXI>, \
+					<&reset FORCE_RESET_H265_BPU>, \
+					<&reset FORCE_RESET_H265_CORE>, \
+					<&sysmem SYS_MEM_SD_H265>;
+			reset-names = "axi", "bpu", "core", "h265-sysmem-up";
+			/* power-domains = <&power RTS_PD_H265>; */
+			use-lossless = "no";
+			status = "disabled";
+		};
+
+		rts_pp: rts_pp@18d00000 {
+			compatible = "realtek,rts3917-pp";
+			reg = <0x18d00000 0x00000434>;
+			interrupt-parent = <&gic>;
+			interrupts = <GIC_SPI BSP_IRQ_GE0 IRQ_TYPE_LEVEL_HIGH>;
+			clock-names = "pp_clk";
+			clocks = <&clks RLX_CLK_GE>;
+			status = "disabled";
+		};
+
+		rts_mjpeg_enc: rts_jpgenc@18e00000 {
+			compatible = "realtek,rts3917-jpgenc";
+			reg = <0x18e00000 0x00002000>;
+			interrupt-parent = <&gic>;
+			interrupts = <GIC_SPI BSP_IRQ_JPEG IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&clks RLX_CLK_JPEG_CK>, \
+				 <&clks RLX_CLK_JPEGDRAM>;
+			clock-names = "jpeg_ck", "jpegdram_ck";
+			clock-frequency = <480000000>;
+			resets = <&reset FORCE_RESET_JPG>, \
+				 <&sysmem SYS_MEM_SD_JPEG>;
+			reset-names = "jpeg-rst", "jpeg-sysmem-up";
+			status = "disabled";
+		};
+
+		rts_bwt: rts_bwt@18d40000 {
+			compatible = "realtek,rts3917-bwt";
+			reg = <0x18d40000 0x00000090>;
+			clocks = <&clks RLX_CLK_BWT>;
+			clock-names = "bwt_ck";
+			status = "disabled";
+		};
+
+		crypto: crypto@18600000 {
+			compatible = "realtek,rts3917-crypto";
+			reg = <0x18600000 0x10000>;
+			interrupt-parent = <&gic>;
+			interrupts = <GIC_SPI BSP_IRQ_AES IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&clks RLX_CLK_CIPHER_CK>;
+			clock-names = "cipher_ck";
+			resets = <&reset FORCE_RESET_CIPHER>,
+				<&sysmem SYS_MEM_SD_CIPHER>;
+			reset-names = "rst", "sd";
+			/* power-domains = <&power RTS_PD_TOP_OFF>; */
+			aes = "ecb", "cbc", "ctr";
+			aead = "gcm(aes)", "ccm(aes)";
+			status = "disabled";
+		};
+
+		sha: sha@19200000 {
+			compatible = "realtek,rts3917-sha";
+			reg = <0x19200000 0x10000>;
+			interrupt-parent = <&gic>;
+			interrupts = <GIC_SPI BSP_IRQ_SHA IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&clks RLX_CLK_SHA>;
+			clock-names = "sha_ck";
+			resets = <&reset FORCE_RESET_SHA256>;
+			reset-names = "rst";
+			/* power-domains = <&power RTS_PD_TOP_OFF>; */
+			status = "disabled";
+		};
+
+		rsa: rsa@18f00000 {
+			compatible = "realtek,rts3917-rsa";
+			reg = <0x18f00000 0x10000>;
+			interrupt-parent = <&gic>;
+			interrupts = <GIC_SPI BSP_IRQ_RSA IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&clks RLX_CLK_RSA>;
+			clock-names = "rsa_ck";
+			resets = <&reset FORCE_RESET_RSA>,
+				<&sysmem SYS_MEM_SD_RSA>;
+			reset-names = "rst", "sd";
+			/* power-domains = <&power RTS_PD_TOP_OFF>; */
+			status = "disabled";
+		};
+
+		audio_dma: audio_dma@18500000 {
+			compatible = "realtek,rts3917-adma";
+			reg = <0x18500000 0x110>;
+			memory-region = <&audio_reserved>;
+			interrupt-parent = <&gic>;
+			interrupts = <GIC_SPI BSP_IRQ_AUDIO IRQ_TYPE_LEVEL_HIGH>;
+			resets = <&sysmem SYS_MEM_SD_AUDIO>;
+			reset-names = "audio-sysmem-up";
+			pinctrl-names = "default","amic","dmic";
+			pinctrl-0 = <&audio_default_mode>;
+			pinctrl-1 = <&audio_amic_mode>;
+			pinctrl-2 = <&audio_dmic_mode>;
+			mono-mode = <&audio_mono_mode>;
+			status = "disabled";
+		};
+
+		audio_i2s: audio_i2s@18501000 {
+			compatible = "realtek,rts3917-adai";
+			reg = <0x18501000 0x108>;
+			resets = <&reset FORCE_RESET_I2S>,	\
+				 <&reset FORCE_RESET_SPDIF>;
+			reset-names = "reset-i2s", "reset-spdif";
+			status = "disabled";
+		};
+
+		audio_codec: audio_codec@18502000 {
+			compatible = "realtek,rts3917-acodec";
+			reg = <0x18502000 0xa8>;
+			resets = <&reset FORCE_RESET_CODEC>;
+			reset-names = "reset-codec";
+			mono-mode = <&audio_mono_mode>;
+			status = "disabled";
+		};
+
+		dmahost: dma-controller@18020000 {
+			compatible = "realtek,rts3917-dmac";
+			reg = <0x18020000 0x100>;
+			interrupt-parent = <&gic>;
+			interrupts = <GIC_SPI BSP_IRQ_DMA IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&clks RLX_CLK_DMA_CK>;
+			#dma-cells = <3>;
+			dma-channels = <2>;
+			dma-vchannels = <4>;
+			dma-masters = <1>;
+			chan_priority = <1>;
+			block_size = <0xfff>;
+			data-width = <4 0 0 0>;
+			status = "disabled";
+		};
+
+		otp: otp@188a0300 {
+			compatible = "realtek,rts-otp";
+			reg = <0x188a0300 0x1000>;
+			clocks = <&clks RLX_CLK_OTP>;
+			clock-names = "otp_ck";
+			resets = <&reset FORCE_RESET_OTP>;
+			reset-names = "rst";
+			status = "disabled";
+		};
+
+		trng: trng@188a0100 {
+			compatible = "realtek,rts3917-trng";
+			reg = <0x188a0100 0x100>;
+			interrupt-parent = <&gic>;
+			interrupts = <GIC_SPI BSP_IRQ_TRNG IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&clks RLX_CLK_TRNG>;
+			clock-names = "trng_ck";
+			resets = <&reset FORCE_RESET_TRNG>;
+			reset-names = "rst";
+			status = "disabled";
+		};
+	};
+};

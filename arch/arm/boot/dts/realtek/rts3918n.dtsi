@@ -1,0 +1,201 @@
+#include "rts3917_base.dtsi"
+
+&eth0 {
+	status = "okay";
+};
+
+&spi0 {
+	status = "okay";
+};
+
+&spi1 {
+	status = "okay";
+};
+
+&usb_ehci {
+	status = "okay";
+};
+
+&usb_ohci {
+	status = "okay";
+};
+
+&usb_device {
+	status = "okay";
+};
+
+&usb_phy {
+	status = "okay";
+};
+
+&sdhc0 {
+	status = "okay";
+};
+
+&pinctrl {
+	sdhc1_default_mode: sdhc1_default {
+		default_mux {
+			function = "sdio1func";
+			groups = "sdio1videogrp";
+		};
+	};
+
+	sdhc1_pullup_mode: sdhc1_pullup {
+		default_mux {
+			function = "sdio1func";
+			groups = "sdio1videogrp";
+		};
+		pullup_cfg0 {
+			pins = "GPIO8",
+				"PAD_SSOR_PIXDIN_EXT_0",
+				"PAD_SSOR_HSYNC",
+				"PAD_SSOR_VSYNC",
+				"PAD_SSOR_PIXCLK";
+			bias-pull-up;
+		};
+	};
+
+	sdhc1_pulldown_mode: sdhc1_pulldown {
+		default_mux {
+			function = "sdio1func";
+			groups = "sdio1videogrp";
+		};
+		pulldown_cfg2 {
+			pins = "GPIO8",
+				"PAD_SSOR_PIXDIN_EXT_0",
+				"PAD_SSOR_HSYNC",
+				"PAD_SSOR_VSYNC",
+				"PAD_SSOR_PIXCLK";
+			bias-pull-down;
+		};
+	};
+};
+
+&sdhc1 {
+	broken-cd;
+};
+
+&uart1 {
+	status = "okay";
+};
+
+&i2c0 {
+	status = "okay";
+};
+
+&i2c1 {
+	status = "okay";
+};
+
+&watchdog {
+	status = "okay";
+};
+
+&rtc {
+	status = "okay";
+};
+
+&thermal {
+	status = "okay";
+};
+
+&rts_timer0 {
+	status = "okay";
+};
+
+&rts_timer1 {
+	status = "okay";
+};
+
+&pinctrl {
+	status = "okay";
+};
+
+&rts_isp {
+	rst-gpio = <&pinctrl 9 GPIO_OPEN_DRAIN>;
+	pwdn-gpio = <&pinctrl 10 GPIO_OPEN_DRAIN>;
+	status = "okay";
+};
+
+&rts_zoom {
+	status = "okay";
+};
+
+&rts_md {
+	status = "okay";
+};
+
+&rts_soc_camera {
+	status = "okay";
+};
+
+&rts_osd_enc {
+	status = "okay";
+};
+
+&rts_osdi {
+	status = "okay";
+};
+
+&rts_h265 {
+	status = "okay";
+};
+
+&rts_pp {
+	status = "okay";
+};
+
+&rts_mjpeg_enc {
+	status = "okay";
+};
+
+&rts_bwt {
+	status = "okay";
+};
+
+&crypto {
+	status = "okay";
+};
+
+&sha {
+	status = "okay";
+};
+
+&rsa {
+	status = "okay";
+};
+
+&audio_dma {
+	status = "okay";
+};
+
+&audio_i2s {
+	status = "okay";
+};
+
+&audio_codec {
+	status = "okay";
+};
+
+&dmahost {
+	status = "okay";
+};
+
+&otp {
+	status = "okay";
+};
+
+&trng {
+	status = "okay";
+};
+
+&leds {
+	gpio_ircut: ircut {
+		gpios = <&pinctrl 17 GPIO_ACTIVE_HIGH>;
+		status = "disabled";
+	};
+	gpio_irled: irled {
+		gpios = <&pinctrl 19 GPIO_ACTIVE_HIGH>;
+		status = "disabled";
+	};
+};

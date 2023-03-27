@@ -33,7 +33,7 @@
 #define ALARM2_ENABLE 2
 #define ALARM3_ENABLE 3
 
-/* used in 3915, useless in 3917 */
+/// used in 3915, useless in 3917
 #define SEC_VALUE(x) (x & 0x3f)
 #define MIN_VALUE(x) ((x & 0x3f00) >> 8)
 #define HOUR_VALUE(x) ((x & 0x1f0000) >> 16)
@@ -49,7 +49,7 @@
 
 #define DATE_REG(cen, year, mon, day) (((cen & 0x7f)<<24) | \
 	((year & 0x7f) << 16) | ((mon & 0xf) << 8) | (day & 0x1f))
-/* end */
+
 
 enum {
 	TYPE_RTS3917 = 1,

@@ -1,0 +1,129 @@
+#include "rts3918n.dtsi"
+
+/ {
+	model = "RTS3918N EVB";
+	compatible = "realtek,rts3918n_evb", "realtek,rts3917";
+
+	#address-cells = <1>;
+	#size-cells = <1>;
+	interrupt-parent = <&gic>;
+
+	memory@80000000 {
+		device_type = "memory";
+		reg = <0x80000000 0x8000000>;
+	};
+
+	chosen {
+		bootargs = "console=tty1 console=ttyS1,57600 init=/sbin/init earlyprintk psci=enable root=/dev/mtdblock4 rootfstype=squashfs user_debug=31";
+		stdout-path = &uart1;
+	};
+};
+
+&audio_reserved {
+	alloc-ranges = <0x80d40000 0x72C0000>;
+	size = <0x40000>;
+	no-map;
+};
+
+&video_reserved {
+	compatible = "shared-dma-pool";
+	reusable;
+	size = <0x3000000>;
+	alloc-ranges = <0x80d40000 0x72C0000>;
+	alignment = <0x10000>;
+};
+
+&rtsmem {
+	reserve-size = <0x1E00000>;
+	vin-ring-height = <256>;
+};
+
+&spi0 {
+	status = "okay";
+	swp_enable;
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		global@0 {
+			label = "global";
+			reg = <0x000000 0x1000000>; //flash size, 16M = 256 * 64k
+			type = "nor";
+			sector_size = <0x10000>;
+		};
+
+		partition@0 {
+			label = "boot";
+			reg = <0x000000 0xA0000>; //6*64K for uboot, 2*128K for hconf
+		};
+
+		partition@080000 {
+			label = "dtb";
+			reg = <0x0A0000 0x20000>; //2*64K
+		};
+
+		partition@0A0000 {
+			label = "kernel";
+			reg = <0x0C0000 0x380000>; //56*64K
+		};
+
+		partition@420000 {
+			label = "rootfs";
+			reg = <0x440000 0x900000>; //144*64K
+
+			fstab {
+				group = "root";
+				dev = "/dev/mtdblock4";
+				mnt_point = "/newroot";
+				fstype = "squashfs";
+				mnt_flags = "ro";
+				fsmgr_flags = "wait,encrypt,verify";
+			};
+		};
+
+		partition@D20000 {
+			label = "userdata";
+			reg = <0xD40000 0x2C0000>; //44*64K
+
+			fstab {
+				group = "user";
+				dev = "/dev/mtdblock5";
+				mnt_point = "/usr/conf";
+				fstype = "jffs2";
+				mnt_flags = "rw";
+				fsmgr_flags = "defaults";
+			};
+		};
+	};
+};
+
+&rts_zoom {
+	status = "okay";
+
+	streams {
+		stream0: stream@0 {
+			fmt = <0x73>;
+			width = <2560>;
+			height = <1440>;
+		};
+		stream1: stream@1 {
+			fmt = <0x03>;
+			width = <640>;
+			height = <360>;
+		};
+		stream2: stream@2 {
+			fmt = <0x0c>;
+			width = <256>;
+			height = <160>;
+		};
+	};
+};
+
+&gpio_ircut {
+	status = "okay";
+};
+
+&gpio_irled {
+	status = "okay";
+};
