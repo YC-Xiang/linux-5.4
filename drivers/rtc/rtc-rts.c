@@ -356,7 +356,7 @@ static int rts_rtc_probe(struct platform_device *pdev)
 	rts_rtc_set_time(&pdev->dev, &tm);
 
 	/* register clocksource */
-	rtc_data = rtc;
+	rtc_data = rtc; // ??? what's the function of clocksource
 	clocksource_rtc.rating = 100;
 	clocksource_register_hz(&clocksource_rtc, 1);
 
