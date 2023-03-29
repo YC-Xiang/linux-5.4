@@ -16,7 +16,7 @@
 #define XB2_RTC_CLK32K_SEL 0x000C
 #define XB2_RTC_XTAL_CFG	0x0010
 #define XB2_RTC_XTAL_STATE	0x0014
-#define XB2_RTC_C_CNT		0x0018
+#define XB2_RTC_C_CNT		0x0018 /// total seconds from the 1970 year
 #define XB2_RTC_C_CNT_SYNC	0x001C
 #define XB2_RTC_S_CNT		0x0020
 #define XB2_RTC_SAMPLE_CTRL	0x0024
@@ -225,9 +225,9 @@ static irqreturn_t rts_rtc_interrupt(int irq, void *dev_id)
 
 	rts_rtc_reg_setbit(pdata, XB2_RTC_ALARM_INT_FLAG, ALARM3_ENABLE);
 
-	events = RTC_IRQF | RTC_AF;
+	events = RTC_IRQF | RTC_AF; // ??? maybe RTC_AF is not need? see definition of RTC_IRQF
 	if (likely(pdata->rtc))
-		rtc_update_irq(pdata->rtc, 1, events);
+		(pdata->rtc, 1, events);
 
 	return events ? IRQ_HANDLED : IRQ_NONE;
 }
@@ -325,7 +325,7 @@ static int rts_rtc_probe(struct platform_device *pdev)
 
 	platform_set_drvdata(pdev, rtc);
 
-	device_init_wakeup(&pdev->dev, 1); // pm related
+	device_init_wakeup(&pdev->dev, 1); /// pm related
 	ret = devm_request_irq(&pdev->dev, rtc->irq, rts_rtc_interrupt,
 			       IRQF_SHARED, pdev->name, pdev);
 	if (ret) {
@@ -337,7 +337,7 @@ static int rts_rtc_probe(struct platform_device *pdev)
 	rts_rtc_reg_setbit(rtc, XB2_RTC_ALARM_INT_EN, ALARM3_ENABLE);
 
 	rtc->rtc = devm_rtc_device_register(&pdev->dev,
-		pdev->name, &rts_rtc_ops, THIS_MODULE); // register rtc deivce
+		pdev->name, &rts_rtc_ops, THIS_MODULE); /// register rtc deivce
 	if (IS_ERR(rtc->rtc)) {
 		ret = PTR_ERR(rtc->rtc);
 		dev_err(&pdev->dev, "Failed to register rtc device: %d\n", ret);
@@ -348,7 +348,7 @@ static int rts_rtc_probe(struct platform_device *pdev)
 	msleep(20);
 	counter_t = ioread32(rtc->base + XB2_RTC_S_CNT);
 	if (counter_o != counter_t)
-		rtc->xtal_flag = 1; // xtal_flag = 1 means exteral crystal oscillator
+		rtc->xtal_flag = 1; /// xtal_flag = 1 means exteral crystal oscillator
 	else
 		rtc->xtal_flag = 0;
 	sec  = ioread32(rtc->base + XB2_RTC_C_CNT);
