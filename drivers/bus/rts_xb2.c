@@ -158,10 +158,10 @@ static irqreturn_t rts_irq_handler(int irq, void *pc)
 		else if (irqno <= MDIO_WR_DONE_INT_BIT /// ??? <=26? >=27?
 			 && irqno >= MDIO_RD_DONE_INT_BIT)
 			irqno -= MDIO_IRQ_OFFSET;
-		else if (irqno == SARADC_DONE_INT_BIT) /// ??? why minus offset?
-			irqno -= SARADC_IRQ_OFFSET;
+		else if (irqno == SARADC_DONE_INT_BIT)
+			irqno -= SARADC_IRQ_OFFSET; /// minus offset then irqno equal to hw irq id 0~10.
 
-		set_bit(irqno, rtsxb2->addr + XB2_PERIP_INT_FLAG);
+		set_bit(irqno, rtsxb2->addr + XB2_PERIP_INT_FLAG); // ??? this maybe should be moved before minus offset?
 
 		irqno = irq_linear_revmap(rtsxb2->irq_domain, irqno);
 		if (irqno)

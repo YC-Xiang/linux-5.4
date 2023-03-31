@@ -106,7 +106,7 @@ static inline void rts_thermal_reg_write(struct rts_thermal_zone *zone,
 	writel(val, zone->base + reg);
 }
 
-int thermal_event_register(struct notifier_block *nb)
+int thermal_event_register(struct notifier_block *nb) /// 将notifier_block注册进notifier list
 {
 	return blocking_notifier_chain_register(&ddrc_trigger, nb);
 }
@@ -259,14 +259,14 @@ static void rts_thermal_update_config(struct rts_thermal_zone *pzone,
 
 	rts_thermal_reg_write(pzone, SYS_TM_CT_LOW, dft_low); /// lower than this temp will trigger interrupt
 	rts_thermal_reg_write(pzone, SYS_TM_CT_HIGH, dft_high);/// higher than this temp will trigger interrupt
-	rts_thermal_reg_write(pzone, SYS_TM_CT_INT_FLAG, 1);
+	rts_thermal_reg_write(pzone, SYS_TM_CT_INT_FLAG, 1); /// clear interrupt flag
 }
 
 static irqreturn_t rts_thermal_irq_handler(int irq, void *irq_data)
 {
 	struct rts_thermal_zone *pzone = irq_data;
 	struct rts_thsens_platform_data *ptrips = pzone->trip_tab;
-	unsigned int idx = pzone->cur_index;
+	unsigned int idx = pzone->cur_index; /// 一开始是0
 	unsigned int code;
 	int flags;
 	u32 highc, lowc;
@@ -279,8 +279,8 @@ static irqreturn_t rts_thermal_irq_handler(int irq, void *irq_data)
 	if (flags == 0)
 		return IRQ_NONE;
 
-	rts_thermal_reg_write(pzone, SYS_TM_CT_INT_EN, 0);
-	rts_thermal_reg_write(pzone, SYS_TM_CT_INT_FLAG, 1);
+	rts_thermal_reg_write(pzone, SYS_TM_CT_INT_EN, 0); /// disable interrupt
+	rts_thermal_reg_write(pzone, SYS_TM_CT_INT_FLAG, 1); /// clear interrupt
 
 	if (idx < ptrips->num_trips - 1) {
 
@@ -292,8 +292,8 @@ static irqreturn_t rts_thermal_irq_handler(int irq, void *irq_data)
 		lowc = pzone->trip_tab->trip_points[idx].temp;
 		highc = pzone->trip_tab->trip_points[idx+1].temp;
 
-		if (code < lowc) {
-			if (idx > 0)
+		if (code < lowc) { /// idx应该对应许多挡位。目前只有两档，so idx == 0.
+			if (idx > 0) /// 如果温度比当前挡位的最低温小，减一档。
 				idx -= 1;
 		} else if (code > highc) {
 			if (idx < ptrips->num_trips - 2)
@@ -306,7 +306,7 @@ static irqreturn_t rts_thermal_irq_handler(int irq, void *irq_data)
 			"thermal set to idx %d\n", idx);
 	}
 
-	schedule_delayed_work(&pzone->therm_work, msecs_to_jiffies(300));
+	schedule_delayed_work(&pzone->therm_work, msecs_to_jiffies(300)); /// add delayed work to work queue
 
 	return IRQ_HANDLED;
 }
@@ -328,7 +328,7 @@ static void rts_ddrc_notify(struct rts_thermal_zone *pzone)
 	blocking_notifier_call_chain(&ddrc_trigger, events, NULL);
 }
 
-static void rts_thermal_work(struct work_struct *work)
+static void rts_thermal_work(struct work_struct *work) /// 每次中断来了，进入中断处理函数，最后都会调用这个work
 {
 	struct rts_thermal_zone *pzone;
 
@@ -340,7 +340,7 @@ static void rts_thermal_work(struct work_struct *work)
 
 	rts_ddrc_notify(pzone);
 
-	rts_thermal_reg_write(pzone, SYS_TM_CT_INT_EN, 1);
+	rts_thermal_reg_write(pzone, SYS_TM_CT_INT_EN, 1); // 中断处理完了最后enable interrupt
 }
 
 static void rts_init_thermal(struct work_struct *work)
@@ -355,10 +355,10 @@ static void rts_init_thermal(struct work_struct *work)
 	udelay(100);
 	rts_thermal_reg_write(pzone, SYS_TM_CTRL, 0x1bf);
 
-	rts_thermal_reg_write(pzone, SYS_TM_CFG2, 0x181);
+	rts_thermal_reg_write(pzone, SYS_TM_CFG2, 0x181); /// enable thermal
 
-	rts_thermal_update_config(pzone, 0);
-	rts_thermal_reg_write(pzone, SYS_TM_CT_INT_EN, 1);
+	rts_thermal_update_config(pzone, 0); /// config lower and upper temperature. 一开始idx==0选择0和1挡。
+	rts_thermal_reg_write(pzone, SYS_TM_CT_INT_EN, 1); /// enable interrupt
 }
 
 static const struct of_device_id rlx_tm_match[] = {
@@ -434,20 +434,23 @@ static int rts_thermal_probe(struct platform_device *pdev)
 	of_property_read_u32_array(pdev->dev.of_node, "thermal_k",
 				   pzone->thermal_k,
 				   ARRAY_SIZE(pzone->thermal_k));
-	ptrips = rts_thermal_parse_dt(pdev);
+	ptrips = rts_thermal_parse_dt(pdev); /// get lower and upper temperature from dts
 	if (!ptrips)
 		return -EINVAL;
 
 	pzone->trip_tab = ptrips;
 
-	INIT_DELAYED_WORK(&pzone->therm_work, rts_thermal_work);
-	INIT_WORK(&pzone->init_work, rts_init_thermal);
+	INIT_DELAYED_WORK(&pzone->therm_work, rts_thermal_work); /// trigger at rts_thermal_irq_handler schedule_delayed_work.
+	INIT_WORK(&pzone->init_work, rts_init_thermal); /// trigger at the end of probe schedule_work(&pzone->init_work);
 	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (!mem) {
 		dev_err(&pdev->dev, "no mem resource?\n");
 		return -EINVAL;
 	}
-
+    /// thermal driver 初始化 notifier chain (BLOCKING_INIT_NOTIFIER_HEAD)
+    /// ddrc driver 调用 thermal_event_register 注册 notifier
+    /// thermal driver 调用 blocking_notifier_call_chain 通知事件
+    /// ddrc driver 调用notifier_call 处理事件
 	BLOCKING_INIT_NOTIFIER_HEAD(&ddrc_trigger);
 
 	pzone->base = devm_ioremap_resource(&pdev->dev, mem);
@@ -475,7 +478,7 @@ static int rts_thermal_probe(struct platform_device *pdev)
 
 	platform_set_drvdata(pdev, pzone);
 
-	schedule_work(&pzone->init_work);
+	schedule_work(&pzone->init_work); /// add work to workqueue.
 failed:
 	return ret;
 }

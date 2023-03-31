@@ -1264,7 +1264,7 @@ static int rts_gpio_direction_output(struct gpio_chip *chip,
 				     unsigned int offset, int value)
 {
 	rts_gpio_set(chip, offset, value);
-	return pinctrl_gpio_direction_output(chip->base + offset); // 和pinctrl耦合部分，会调用到pinmux_ops中的.gpio_set_direction
+	return pinctrl_gpio_direction_output(chip->base + offset);
 }
 
 static int rts_gpio_to_irq(struct gpio_chip *chip, unsigned int offset)
@@ -1278,12 +1278,12 @@ static int rts_gpio_to_irq(struct gpio_chip *chip, unsigned int offset)
 static struct gpio_chip rts_gpio_chip = {
 	.label = MODULE_NAME,
 	.owner = THIS_MODULE,
-	.request = rts_gpio_request,
-	.free = rts_gpio_free,
-	.direction_input = rts_gpio_direction_input,
-	.direction_output = rts_gpio_direction_output,
-	.get = rts_gpio_get,
-	.set = rts_gpio_set,
+	.request = rts_gpio_request, /// 和pinctrl耦合部分，会调用到pinmux_ops中的.request
+	.free = rts_gpio_free, /// 和pinctrl耦合部分，会调用到pinmux_ops中的.free
+	.direction_input = rts_gpio_direction_input,   /// 和pinctrl耦合部分，会调用到pinmux_ops中的.gpio_set_direction
+	.direction_output = rts_gpio_direction_output, /// 和pinctrl耦合部分，会调用到pinmux_ops中的.gpio_set_direction
+	.get = rts_gpio_get, /// 获取gpio value
+	.set = rts_gpio_set, /// 设置gpio value
 	.to_irq = rts_gpio_to_irq,
 	.base = 0,
 	.ngpio = RTS_MAX_NGPIO,
