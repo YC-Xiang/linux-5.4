@@ -10,7 +10,7 @@
 #include <dt-bindings/gpio/gpio.h>
 
 / {
-	compatible = "realtek,rts3917";
+	compatible = "realtek,rts3917"; /// manufacturer,model
 	#address-cells = <1>;
 	#size-cells = <1>;
 	interrupt-parent = <&gic>;

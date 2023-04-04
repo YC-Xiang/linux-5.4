@@ -77,21 +77,21 @@ static ssize_t saradc_read(struct device *dev,
 	if (mutex_lock_interruptible(&adc->lock))
 		return -ERESTARTSYS;
 
-	if (i < 3)
+	if (i < 3) /// cuz 3917 ch0->ch1 ch1->ch2 ch2->ch3 ch3->ch0
 		i++;
 	else if (i == 3)
 		i = 0;
 	value = readl(adc->mmio_base + SYS_SAR_DAT0 + (i << 2));
 	dev_dbg(dev, "raw value = 0x%x\n", value);
-	value &= 0x3fc;
-	value = value * 3 + (value * 57 + 128) / 256;
+	value &= 0x3fc; /// 3917 bit[1:0]无效
+	value = value * 3 + (value * 57 + 128) / 256; // ??? why this formulation? more precious than value * 3.3?
 	status = sprintf(buf, "%d\n", value);
 
 	mutex_unlock(&adc->lock);
 	return status;
 }
 
-u32 saradc_read_in(int i)
+u32 saradc_read_in(int i) // ??? what's the usage of this func? not referenced.
 {
 	u32 value = 0;
 
@@ -164,11 +164,11 @@ static int saradc_probe(struct platform_device *pdev)
 	xb2rate = clk_get_rate(pclk);
 	clk_put(pclk);
 
-	clkin = readl(adc->mmio_base + SYS_SAR_DIV_CNT);
+	clkin = readl(adc->mmio_base + SYS_SAR_DIV_CNT); // clk divide by 2*sar_div_cnt. if xb2_ck=25M, div_cnt=8, clk=25M/(2*8)=1.5625M
 	clkin &= 0xff;
 	clkin = (12500000 + (clkin/2))/clkin;
 	chansel = (xb2rate * 5 + clkin/2) / clkin;
-	chansel &= 0xff;
+	chansel &= 0xff; // analog related
 
 	mutex_init(&adc->lock);
 
@@ -182,7 +182,7 @@ static int saradc_probe(struct platform_device *pdev)
 		}
 	}
 
-	adc->hwmon_dev = hwmon_device_register(&pdev->dev);
+	adc->hwmon_dev = hwmon_device_register(&pdev->dev); /// register hwmon device.
 	if (IS_ERR(adc->hwmon_dev)) {
 		dev_err(&pdev->dev, "hwmon_device_register failed.\n");
 		status = PTR_ERR(adc->hwmon_dev);
