@@ -6,10 +6,6 @@
 #include <rts_gpio.h>
 #include <dm/device-internal.h>
 
-enum {
-	RTS_GPIOS_NUM = 89,
-};
-
 #define RTS_GETFIELD(val, width, offset)	\
 			((val >> offset) & ((1 << width) - 1))
 
@@ -34,14 +30,6 @@ static unsigned int rts_gpio_get_field(u32 reg,
 
 	return RTS_GETFIELD(val, width, offset);
 }
-
-struct rts_gpio_priv {
-	u32 base_addr;
-	u64 pinsmask[2];
-	u8 audio_adda_gpio_value;
-	u8 usb0_gpio_value;
-	u8 usb1_gpio_value;
-};
 
 static struct sharepin_cfg_addr pincfgaddr[] = {
 	{.pinl = 0, .pinh = 15,
@@ -93,52 +81,6 @@ static struct sharepin_cfg_addr *rts_get_pinaddr(int pin)
 	return 0;
 }
 
-static int rts_gpio_request(struct udevice *dev, unsigned offset, const char *label)
-{
-	int i, j;
-	struct rts_gpio_priv *priv = dev_get_priv(dev);
-	u64 bs;
-	printf("1111111111\n");
-	if (offset > 89)
-		return -EINVAL;
-
-	i = offset > 63;
-	j = i ? (offset - 64) : offset;
-	bs = 1;
-	bs <<= j;
-	printf("22222222222\n");
-	if (priv->pinsmask[i] & bs)
-		return -EBUSY;
-
-	priv->pinsmask[i] |= bs;
-	printf("333333333333\n");
-	printf("rts_gpio_request\n");
-
-	return 0;
-}
-
-static int rts_gpio_free(struct udevice *dev, unsigned offset)
-{
-	int i, j;
-	struct rts_gpio_priv *priv = dev_get_priv(dev);
-	u64 bs;
-	printf("rts_gpio_free\n");
-	if (offset > 89)
-		return -EINVAL;
-
-	i = offset > 63;
-	j = i ? (offset - 64) : offset;
-	bs = 1;
-	bs <<= j;
-
-	if (priv->pinsmask[i] & bs) {
-		priv->pinsmask[i] &= ~bs;
-		return 0;
-	} else {
-		return -EINVAL;
-	}
-}
-
 static int rts_gpio_get_value(struct udevice *dev, unsigned offset)
 {
 	struct pinregs *regs;
@@ -162,9 +104,6 @@ static int rts_gpio_get_value(struct udevice *dev, unsigned offset)
 
 	return rts_gpio_get_field(priv->base_addr + (u32)&(regs->gpio_value),
 				  1, bf);
-
-	printf("rts_gpio_get_value\n");
-	return 0;
 }
 
 static int rts_gpio_set_value(struct udevice *dev, unsigned offset,
@@ -216,7 +155,6 @@ static int rts_gpio_set_value(struct udevice *dev, unsigned offset,
 			rts_gpio_set_field(priv->base_addr + (u32)&regs->gpio_value, 0, 1, bf);
 	}
 
-	printf("rts_gpio_set_value\n");
 	return 0;
 }
 
@@ -232,8 +170,6 @@ static int rts_gpio_direction_input(struct udevice *dev, unsigned offset)
 	bf = offset - sc->pinl;
 
 	rts_gpio_set_field(priv->base_addr + (u32)&regs->gpio_oe, 0, 1, bf);
-
-	printf("rts_gpio_direction_input\n");
 
 	return 0;
 }
@@ -254,8 +190,6 @@ static int rts_gpio_direction_output(struct udevice *dev, unsigned offset,
 
 	rts_gpio_set_value(dev, offset, value);
 
-	printf("rts_gpio_direction_output\n");
-
 	return 0;
 }
 
@@ -265,11 +199,125 @@ static int rts_gpio_get_function(struct udevice *dev, unsigned offset)
 	struct sharepin_cfg_addr *sc;
 	int bf;
 	struct rts_gpio_priv *priv = dev_get_priv(dev);
-	int val;
+	int val = 0;
 
 	sc = rts_get_pinaddr(offset);
 	regs = (struct pinregs *)sc->pinaddr;
 	bf = offset - sc->pinl;
+
+	switch (sc->pint) {
+	case GPIO_TYPE_GENERIC:
+		if (offset == 0)
+			val = rts_gpio_get_field(priv->base_addr + (u32)&(regs->pad_cfg),
+					   4, 0);
+		else if (offset == 1)
+			val = rts_gpio_get_field(priv->base_addr + (u32)&(regs->pad_cfg),
+					   4, 4);
+		else if (offset == 8)
+			val = rts_gpio_get_field(priv->base_addr + (u32)&(regs->pad_cfg),
+					   4, 8);
+		else if (offset == 12)
+			val = rts_gpio_get_field(priv->base_addr + (u32)&(regs->pad_cfg),
+					   4, 12);
+		else if (offset == 13)
+			val = rts_gpio_get_field(priv->base_addr + (u32)&(regs->pad_cfg),
+					   4, 16);
+		if (val > 1)
+			return GPIOF_FUNC;
+		break;
+	case GPIO_TYPE_UART0:
+	case GPIO_TYPE_UART1:
+	case GPIO_TYPE_UART2:
+		bf = 3 - bf;
+		val = rts_gpio_get_field(priv->base_addr + (u32)&(regs->pad_cfg),
+				   4, bf << 2);
+		if ((val & 0x1) != 1)
+			return GPIOF_FUNC;
+		break;
+	case GPIO_TYPE_PWM:
+	case GPIO_TYPE_I2C:
+	case GPIO_TYPE_I2S:
+	case GPIO_TYPE_USB3:
+		val = rts_gpio_get_field(priv->base_addr + (u32)&(regs->pad_cfg),
+				   4, bf << 2);
+		if ((val & 0x1) != 1)
+			return GPIOF_FUNC;
+		break;
+	case GPIO_TYPE_SDIO0:
+		if (offset == 38)
+			val = rts_gpio_get_field(priv->base_addr + (u32)&(regs->pad_cfg),
+					   2, 4);
+		else if (offset == 39)
+			val = rts_gpio_get_field(priv->base_addr + (u32)&(regs->pad_cfg),
+					   2, 2);
+		else
+			val = rts_gpio_get_field(priv->base_addr + (u32)&(regs->pad_cfg),
+					   2, 0);
+		if ((val & 0x1) != 1)
+			return GPIOF_FUNC;
+		break;
+	case GPIO_TYPE_SDIO1:
+		if (offset == 46)
+			val = rts_gpio_get_field(priv->base_addr + (u32)&(regs->pad_cfg),
+					   4, 8);
+		else if (offset == 47)
+			val = rts_gpio_get_field(priv->base_addr + (u32)&(regs->pad_cfg),
+					   4, 4);
+		else
+			val = rts_gpio_get_field(priv->base_addr + (u32)&(regs->pad_cfg),
+					   4, 0);
+		if ((val & 0x1) != 1)
+			return GPIOF_FUNC;
+		break;
+	case GPIO_TYPE_SARADC:
+	case GPIO_TYPE_USBD:
+	case GPIO_TYPE_USBH:
+		val = rts_gpio_get_field(priv->base_addr + (u32)&(regs->pad_cfg),
+				   4, bf << 2);
+		if (val != 2)
+			return GPIOF_FUNC;
+		break;
+	case GPIO_TYPE_SSOR:
+		if (bf >= 11)
+			bf = 11;
+		bf /= 2;
+		if (bf >= 3)
+			bf++;
+		val = rts_gpio_get_field(priv->base_addr + (u32)&(regs->pad_cfg),
+				   4, bf << 2);
+		if ((val & 0x1) != 1)
+			return GPIOF_FUNC;
+		break;
+	case GPIO_TYPE_DMIC:
+		bf /= 2;
+		val = rts_gpio_get_field(priv->base_addr + (u32)&(regs->pad_cfg),
+				   4, bf << 2);
+		if ((val & 0x1) != 1)
+			return GPIOF_FUNC;
+		break;
+	case GPIO_TYPE_ADDA:
+		bf /= 2;
+		val = rts_gpio_get_field(priv->base_addr + (u32)&(regs->pad_cfg),
+				   4, bf << 2);
+		if (val != 2)
+			return GPIOF_FUNC;
+		break;
+	case GPIO_TYPE_SSORI2C:
+		val = rts_gpio_get_field(priv->base_addr + (u32)&(regs->pad_cfg),
+				   2, 0);
+		if ((val & 0x1) != 1)
+			return GPIOF_FUNC;
+		break;
+	case GPIO_TYPE_SPI:
+		val = rts_gpio_get_field(priv->base_addr + (u32)&(regs->pad_cfg),
+				   2, 0);
+		if ((val & 0x1) != 1)
+			return GPIOF_FUNC;
+		break;
+	default:
+		printf("not known function selector\n");
+		break;
+	}
 
 	val = rts_gpio_get_field(priv->base_addr + (u32)&(regs->gpio_oe),
 				  1, bf);
@@ -280,26 +328,25 @@ static int rts_gpio_get_function(struct udevice *dev, unsigned offset)
 }
 
 static const struct dm_gpio_ops rts_gpio_ops = {
-	// .request = rts_gpio_request,
-	// .rfree = rts_gpio_free,
-	.direction_input	= rts_gpio_direction_input,
-	.direction_output	= rts_gpio_direction_output,
+	.direction_input	= rts_gpio_direction_input, /// 设置input
+	.direction_output	= rts_gpio_direction_output, /// 设置ouput，还可以同时设置value
 	.get_value		= rts_gpio_get_value,
 	.set_value		= rts_gpio_set_value,
-	.get_function		= rts_gpio_get_function,
+	.get_function		= rts_gpio_get_function, /// 根据寄存器返回GPIO状态，input/output/func复用
 };
 
 static int rts_gpio_probe(struct udevice *dev)
 {
 	struct gpio_dev_priv *uc_priv = dev_get_uclass_priv(dev);
-	struct rts_gpio_priv *priv = dev_get_priv(dev);  // 私有数据
-	struct rts_gpio_plat *plat = dev_get_plat(dev); // 静态dev里定义的数据
+	struct rts_gpio_priv *priv = dev_get_priv(dev);
 
-	priv->base_addr = plat->base_addr; // 0x18800000
-	uc_priv->gpio_count = RTS_GPIOS_NUM;
-	uc_priv->bank_name = plat->name;
-
-	printf("rts gpio driver probe\n");
+#if CONFIG_IS_ENABLED(OF_CONTROL)
+	priv->base_addr = dev_read_addr(dev); /// 从设备树里获取基地址
+#else
+	priv->base_addr = RTS_GPIO_BASEADDR; /// 如果用的静态定义device，从头文件里获取基地址
+#endif
+	uc_priv->gpio_count = RTS_GPIOS_NUM; /// 89
+	uc_priv->bank_name = "rts_gpio";
 
 	return 0;
 }
@@ -314,8 +361,6 @@ U_BOOT_DRIVER(rts_gpio_drv) = {
 	.id = UCLASS_GPIO,
 #if CONFIG_IS_ENABLED(OF_CONTROL)
 	.of_match = rts_gpio_ids,
-	.of_to_plat = rts_gpio_ofdata_to_platdata,
-	.plat_auto = sizeof(struct rts_gpio_plat),
 #endif
 	.probe = rts_gpio_probe,
 	.ops = &rts_gpio_ops,

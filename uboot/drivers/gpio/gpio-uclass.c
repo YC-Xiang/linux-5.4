@@ -422,7 +422,7 @@ int gpio_request(unsigned gpio, const char *label)
 	struct gpio_desc desc;
 	int ret;
 
-	ret = gpio_to_device(gpio, &desc); /// 这里会probe
+	ret = gpio_to_device(gpio, &desc);
 	if (ret)
 		return ret;
 
@@ -1176,7 +1176,7 @@ int gpio_request_by_name_nodev(ofnode node, const char *list_name, int index,
 }
 
 int gpio_request_by_name(struct udevice *dev, const char *list_name, int index,
-			 struct gpio_desc *desc, int flags)
+			 struct gpio_desc *desc, int flags) /// list_name 是dts中的xxx-gpios
 {
 	struct ofnode_phandle_args args;
 	ofnode node;
@@ -1326,7 +1326,7 @@ static int gpio_renumber(struct udevice *removed_dev)
 
 	/* Ensure that we have a base for each bank */
 	base = 0; /// 从0开始编号，所以不用在driver中设置
-	uclass_foreach_dev(dev, uc) {
+	uclass_foreach_dev(dev, uc) { /// 从uclass中获取udevice
 		if (device_active(dev) && dev != removed_dev) {
 			uc_priv = dev_get_uclass_priv(dev);
 			uc_priv->gpio_base = base;
@@ -1515,7 +1515,7 @@ UCLASS_DRIVER(gpio) = {
 	.id		= UCLASS_GPIO,
 	.name		= "gpio",
 	.flags		= DM_UC_FLAG_SEQ_ALIAS,
-	.post_probe	= gpio_post_probe,
+	.post_probe	= gpio_post_probe, /// 在device probe函数调用完后调用
 	.post_bind	= gpio_post_bind,
 	.pre_remove	= gpio_pre_remove,
 	.per_device_auto	= sizeof(struct gpio_dev_priv),
