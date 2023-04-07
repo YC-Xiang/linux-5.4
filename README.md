@@ -1,6 +1,8 @@
 # linux-5.4 notes
 use some distinct symbols for easier searching:
 
-search `///` for notes made.
+`///` for notes in C source files.
 
-search `???` for questions still not resolved.
+`###` for notes in Makefiles.
+
+`???` for questions still not resolved.
