@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.S": "c",
+        "i2c-designware-core.h": "c",
+        "i2c.h": "c"
+    }
+}
