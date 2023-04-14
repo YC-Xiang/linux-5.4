@@ -26,7 +26,7 @@
 static void i2c_dw_configure_fifo_master(struct dw_i2c_dev *dev)
 {
 	/* Configure Tx/Rx FIFO threshold levels */
-	regmap_write(dev->map, DW_IC_TX_TL, dev->tx_fifo_depth / 2);
+	regmap_write(dev->map, DW_IC_TX_TL, dev->tx_fifo_depth / 2); /// 0x10
 	regmap_write(dev->map, DW_IC_RX_TL, 0);
 
 	/* Configure the I2C master */
@@ -52,12 +52,12 @@ static int i2c_dw_set_timings_master(struct dw_i2c_dev *dev)
 		return ret;
 
 	/* Set standard and fast speed dividers for high/low periods */
-	sda_falling_time = t->sda_fall_ns ?: 300; /* ns */
+	sda_falling_time = t->sda_fall_ns ?: 300; /* ns */ /// t->sda_fall_ns设备树中定义了才会有，没定义则为300ns
 	scl_falling_time = t->scl_fall_ns ?: 300; /* ns */
 
 	/* Calculate SCL timing parameters for standard mode if not set */
 	if (!dev->ss_hcnt || !dev->ss_lcnt) {
-		ic_clk = i2c_dw_clk_rate(dev);
+		ic_clk = i2c_dw_clk_rate(dev); /// 40M
 		dev->ss_hcnt =
 			i2c_dw_scl_hcnt(ic_clk,
 					4000,	/* tHD;STA = tHIGH = 4.0 us */
@@ -70,7 +70,7 @@ static int i2c_dw_set_timings_master(struct dw_i2c_dev *dev)
 					scl_falling_time,
 					0);	/* No offset */
 	}
-	dev_dbg(dev->dev, "Standard Mode HCNT:LCNT = %d:%d\n",
+	dev_dbg(dev->dev, "Standard Mode HCNT:LCNT = %d:%d\n", //169 199
 		dev->ss_hcnt, dev->ss_lcnt);
 
 	/*
@@ -78,7 +78,7 @@ static int i2c_dw_set_timings_master(struct dw_i2c_dev *dev)
 	 * difference is the timing parameter values since the registers are
 	 * the same.
 	 */
-	if (t->bus_freq_hz == 1000000) {
+	if (t->bus_freq_hz == 1000000) { /// 跳过，t->bus_freq_hz == 4000000
 		/*
 		 * Check are Fast Mode Plus parameters available. Calculate
 		 * SCL timing parameters for Fast Mode Plus if not set.
@@ -120,11 +120,11 @@ static int i2c_dw_set_timings_master(struct dw_i2c_dev *dev)
 					scl_falling_time,
 					0);	/* No offset */
 	}
-	dev_dbg(dev->dev, "Fast Mode%s HCNT:LCNT = %d:%d\n",
+	dev_dbg(dev->dev, "Fast Mode%s HCNT:LCNT = %d:%d\n", /// 33 63
 		fp_str, dev->fs_hcnt, dev->fs_lcnt);
 
 	/* Check is high speed possible and fall back to fast mode if not */
-	if ((dev->master_cfg & DW_IC_CON_SPEED_MASK) ==
+	if ((dev->master_cfg & DW_IC_CON_SPEED_MASK) ==   /// 跳过 因为 master_cfg != DW_IC_CON_SPEED_HIGH
 		DW_IC_CON_SPEED_HIGH) {
 		if ((comp_param1 & DW_IC_COMP_PARAM_1_SPEED_MODE_MASK)
 			!= DW_IC_COMP_PARAM_1_SPEED_MODE_HIGH) {
@@ -152,7 +152,7 @@ static int i2c_dw_set_timings_master(struct dw_i2c_dev *dev)
 			dev->hs_hcnt, dev->hs_lcnt);
 	}
 
-	ret = i2c_dw_set_sda_hold(dev);
+	ret = i2c_dw_set_sda_hold(dev); /// 失效，在i2c_dw_init_master中直接写了regmap_write(dev->map, DW_IC_SDA_HOLD, 20);
 	if (ret)
 		goto out;
 
@@ -164,7 +164,7 @@ static int i2c_dw_set_timings_master(struct dw_i2c_dev *dev)
 		mode_str = "High Speed Mode";
 		break;
 	default:
-		mode_str = "Fast Mode";
+		mode_str = "Fast Mode"; /// 默认fast mode
 	}
 	dev_dbg(dev->dev, "Bus speed: %s%s\n", mode_str, fp_str);
 
@@ -753,7 +753,7 @@ int i2c_dw_probe_master(struct dw_i2c_dev *dev)
 	dev->disable = i2c_dw_disable;
 	dev->disable_int = i2c_dw_disable_int;
 
-	ret = i2c_dw_init_regmap(dev);
+	ret = i2c_dw_init_regmap(dev); /// 设置寄存器读写函数
 	if (ret)
 		return ret;
 
@@ -803,7 +803,7 @@ int i2c_dw_probe_master(struct dw_i2c_dev *dev)
 	 * registered I2C slaves that do I2C transfers in their probe.
 	 */
 	pm_runtime_get_noresume(dev->dev);
-	ret = i2c_add_numbered_adapter(adap);
+	ret = i2c_add_numbered_adapter(adap); /// 注册adapter
 	if (ret)
 		dev_err(dev->dev, "failure adding adapter: %d\n", ret);
 	pm_runtime_put_noidle(dev->dev);

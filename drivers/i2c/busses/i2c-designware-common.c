@@ -321,10 +321,10 @@ void i2c_dw_adjust_bus_speed(struct dw_i2c_dev *dev)
 	 */
 	if (acpi_speed && t->bus_freq_hz)
 		t->bus_freq_hz = min(t->bus_freq_hz, acpi_speed);
-	else if (acpi_speed || t->bus_freq_hz) // ??? 走这边
+	else if (acpi_speed || t->bus_freq_hz)
 		t->bus_freq_hz = max(t->bus_freq_hz, acpi_speed);
 	else
-		t->bus_freq_hz = I2C_MAX_FAST_MODE_FREQ;
+		t->bus_freq_hz = I2C_MAX_FAST_MODE_FREQ; // 走这边
 }
 EXPORT_SYMBOL_GPL(i2c_dw_adjust_bus_speed);
 
@@ -397,7 +397,7 @@ int i2c_dw_set_sda_hold(struct dw_i2c_dev *dev)
 	if (ret)
 		goto err_release_lock;
 
-	if (reg >= DW_IC_SDA_HOLD_MIN_VERS) {
+	if (reg >= DW_IC_SDA_HOLD_MIN_VERS) { /// yes
 		if (!dev->sda_hold_time) {
 			/* Keep previous hold time setting if no one set it */
 			ret = regmap_read(dev->map, DW_IC_SDA_HOLD,
@@ -416,7 +416,7 @@ int i2c_dw_set_sda_hold(struct dw_i2c_dev *dev)
 		if (!(dev->sda_hold_time & DW_IC_SDA_HOLD_RX_MASK))
 			dev->sda_hold_time |= 1 << DW_IC_SDA_HOLD_RX_SHIFT;
 
-		dev_dbg(dev->dev, "SDA Hold Time TX:RX = %d:%d\n",
+		dev_dbg(dev->dev, "SDA Hold Time TX:RX = %d:%d\n", /// 1:1
 			dev->sda_hold_time & ~(u32)DW_IC_SDA_HOLD_RX_MASK,
 			dev->sda_hold_time >> DW_IC_SDA_HOLD_RX_SHIFT);
 	} else if (dev->set_sda_hold_time) {
@@ -578,7 +578,7 @@ int i2c_dw_set_fifo_size(struct dw_i2c_dev *dev)
 	if (ret)
 		return ret;
 
-	tx_fifo_depth = ((param >> 16) & 0xff) + 1;
+	tx_fifo_depth = ((param >> 16) & 0xff) + 1; /// 0x20
 	rx_fifo_depth = ((param >> 8)  & 0xff) + 1;
 	if (!dev->tx_fifo_depth) {
 		dev->tx_fifo_depth = tx_fifo_depth;

@@ -182,7 +182,7 @@ static int dw_i2c_plat_request_regs(struct dw_i2c_dev *dev)
 	case MODEL_BAIKAL_BT1:
 		ret = bt1_i2c_request_regs(dev);
 		break;
-	default: // this way
+	default: /// this way
 		dev->base = devm_platform_ioremap_resource(pdev, 0);
 		ret = PTR_ERR_OR_ZERO(dev->base);
 		break;
@@ -240,9 +240,9 @@ static int dw_i2c_plat_probe(struct platform_device *pdev)
 	if (pdata)
 		t->bus_freq_hz = pdata->i2c_scl_freq;
 	else
-		i2c_parse_fw_timings(&pdev->dev, t, false); // ??? 走这边? 查找设备树，没有设置则使用默认值。设置dev->timings
+		i2c_parse_fw_timings(&pdev->dev, t, false); // ??? 走这边? 查找设备树获取参数。因为false，设备树有才设置，没有都不使用默认值。
 
-	i2c_dw_adjust_bus_speed(dev); /// 没有定义CONFIG_ACPI 则t->bus_freq_hz=i2c_parse_fw_timings中设置的默认值I2C_MAX_STANDARD_MODE_FREQ 100000
+	i2c_dw_adjust_bus_speed(dev); /// 没有定义CONFIG_ACPI和bus_freq_hz 则t->bus_freq_hz=I2C_MAX_FAST_MODE_FREQ
 
 	if (pdev->dev.of_node)
 		dw_i2c_of_configure(pdev); /// 跳过 cuz dev->flags = 0
