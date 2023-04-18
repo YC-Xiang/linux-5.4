@@ -25,7 +25,7 @@
 #include <linux/list.h>
 
 typedef struct global_data {
-	bd_t *bd;
+	bd_t *bd; /// 开发板参数
 	unsigned long flags;
 	unsigned int baudrate;
 	unsigned long cpu_clk;		/* CPU clock in Hz!		*/
@@ -60,7 +60,7 @@ typedef struct global_data {
 	unsigned long mon_len;		/* monitor len */
 	unsigned long irq_sp;		/* irq stack pointer */
 	unsigned long start_addr_sp;	/* start_addr_stackpointer */
-	unsigned long reloc_off;
+	unsigned long reloc_off; /// uboot的relocation的偏移
 	struct global_data *new_gd;	/* relocated global data */
 
 #ifdef CONFIG_DM

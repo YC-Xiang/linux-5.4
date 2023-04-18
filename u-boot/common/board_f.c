@@ -127,7 +127,7 @@ __weak void board_add_ram_info(int use_default)
 
 static int init_baud_rate(void)
 {
-	gd->baudrate = env_get_ulong("baudrate", 10, CONFIG_BAUDRATE);
+	gd->baudrate = env_get_ulong("baudrate", 10, CONFIG_BAUDRATE); /// CONFIG_BAUDRATE 在Kconfig中默认为115200
 	return 0;
 }
 
@@ -145,7 +145,7 @@ static int display_text_info(void)
 	text_base = CONFIG_SYS_MONITOR_BASE;
 #endif
 
-	debug("U-Boot code: %08lX -> %08lX  BSS: -> %08lX\n",
+	debug("U-Boot code: %08lX -> %08lX  BSS: -> %08lX\n", /// 0x82800000(rlxboard.h) 0x8282ede8 0x828345E8
 	      text_base, bss_start, bss_end);
 #endif
 
@@ -214,7 +214,7 @@ static int show_dram_config(void)
 	unsigned long long size;
 	char dram_clk[32];
 
-#ifdef CONFIG_NR_DRAM_BANKS
+#ifdef CONFIG_NR_DRAM_BANKS ///CONFIG_NR_DRAM_BANKS=1
 	int i;
 
 	debug("\nRAM Configuration:\n");
@@ -241,8 +241,8 @@ static int show_dram_config(void)
 __weak int dram_init_banksize(void)
 {
 #if defined(CONFIG_NR_DRAM_BANKS) && defined(CONFIG_SYS_SDRAM_BASE)
-	gd->bd->bi_dram[0].start = CONFIG_SYS_SDRAM_BASE;
-	gd->bd->bi_dram[0].size = get_effective_memsize();
+	gd->bd->bi_dram[0].start = CONFIG_SYS_SDRAM_BASE; /// 0x80000000
+	gd->bd->bi_dram[0].size = get_effective_memsize();/// 0x8000000
 #endif
 
 	return 0;
@@ -331,7 +331,7 @@ static int setup_dest_addr(void)
 	/*
 	 * Ram is setup, size stored in gd !!
 	 */
-	debug("Ram size: %08lX\n", (ulong)gd->ram_size); /// 0x8000000
+	debug("Ram size: %08lX\n", (ulong)gd->ram_size); /// gd->ram_size 在rlxboard.c中读寄存器获取 0x8000000
 #if defined(CONFIG_SYS_MEM_TOP_HIDE)
 	/*
 	 * Subtract specified amount of memory to hide so that it won't
@@ -345,13 +345,13 @@ static int setup_dest_addr(void)
 	 */
 	gd->ram_size -= CONFIG_SYS_MEM_TOP_HIDE;
 #endif
-#ifdef CONFIG_SYS_SDRAM_BASE
+#ifdef CONFIG_SYS_SDRAM_BASE /// rlxboard.c gd->ram_base 0x80000000
 	gd->ram_base = CONFIG_SYS_SDRAM_BASE;
 #endif
-	gd->ram_top = gd->ram_base + get_effective_memsize();
+	gd->ram_top = gd->ram_base + get_effective_memsize(); /// gd->ram_base + gd->ram_size 0x88000000
 	gd->ram_top = board_get_usable_ram_top(gd->mon_len);
 	gd->relocaddr = gd->ram_top;
-	debug("Ram top: %08lX\n", (ulong)gd->ram_top); /// 0x88000000
+	debug("Ram top: %08lX\n", (ulong)gd->ram_top);
 #if defined(CONFIG_MP) && (defined(CONFIG_MPC86xx) || defined(CONFIG_E500))
 	/*
 	 * We need to make sure the location we intend to put secondary core
@@ -392,13 +392,13 @@ __weak int reserve_mmu(void)
 #if !(CONFIG_IS_ENABLED(SYS_ICACHE_OFF) && CONFIG_IS_ENABLED(SYS_DCACHE_OFF))
 	/* reserve TLB table */
 	gd->arch.tlb_size = PGTABLE_SIZE;
-	gd->relocaddr -= gd->arch.tlb_size;
+	gd->relocaddr -= gd->arch.tlb_size; /// 0x87ffc000
 
 	/* round down to next 64 kB limit */
-	gd->relocaddr &= ~(0x10000 - 1);
+	gd->relocaddr &= ~(0x10000 - 1); /// 0x87ff0000
 
 	gd->arch.tlb_addr = gd->relocaddr;
-	debug("TLB table from %08lx to %08lx\n", gd->arch.tlb_addr,
+	debug("TLB table from %08lx to %08lx\n", gd->arch.tlb_addr, /// 0x87ff0000 to 0x87ff4000
 	      gd->arch.tlb_addr + gd->arch.tlb_size);
 
 #ifdef CONFIG_SYS_MEM_RESERVE_SECURE
@@ -457,14 +457,14 @@ static int reserve_uboot(void)
 		 * reserve memory for U-Boot code, data & bss
 		 * round down to next 4 kB limit
 		 */
-		gd->relocaddr -= gd->mon_len;
-		gd->relocaddr &= ~(4096 - 1);
+		gd->relocaddr -= gd->mon_len; /// 87ff0000 - 0x345e8 = 87fbba18
+		gd->relocaddr &= ~(4096 - 1); /// 87fbb000
 	#if defined(CONFIG_E500) || defined(CONFIG_MIPS)
 		/* round down to next 64 kB limit so that IVPR stays aligned */
 		gd->relocaddr &= ~(65536 - 1);
 	#endif
 
-		debug("Reserving %ldk for U-Boot at: %08lx\n",
+		debug("Reserving %ldk for U-Boot at: %08lx\n", /// 209k 87fbb000
 		      gd->mon_len >> 10, gd->relocaddr);
 	}
 
@@ -498,8 +498,8 @@ static int reserve_noncached(void)
 /* reserve memory for malloc() area */
 static int reserve_malloc(void)
 {
-	gd->start_addr_sp = gd->start_addr_sp - TOTAL_MALLOC_LEN;
-	debug("Reserving %dk for malloc() at: %08lx\n",
+	gd->start_addr_sp = gd->start_addr_sp - TOTAL_MALLOC_LEN; /// 0x87fbb000 - 0x840000
+	debug("Reserving %dk for malloc() at: %08lx\n", /// 8448k 8777b000
 	      TOTAL_MALLOC_LEN >> 10, gd->start_addr_sp);
 #ifdef CONFIG_SYS_NONCACHED_MEMORY
 	reserve_noncached();
@@ -515,7 +515,7 @@ static int reserve_board(void)
 		gd->start_addr_sp -= sizeof(bd_t);
 		gd->bd = (bd_t *)map_sysmem(gd->start_addr_sp, sizeof(bd_t));
 		memset(gd->bd, '\0', sizeof(bd_t));
-		debug("Reserving %zu Bytes for Board Info at: %08lx\n",
+		debug("Reserving %zu Bytes for Board Info at: %08lx\n", // 80 8777afb0
 		      sizeof(bd_t), gd->start_addr_sp);
 	}
 	return 0;
@@ -533,7 +533,7 @@ static int reserve_global_data(void)
 {
 	gd->start_addr_sp -= sizeof(gd_t);
 	gd->new_gd = (gd_t *)map_sysmem(gd->start_addr_sp, sizeof(gd_t));
-	debug("Reserving %zu Bytes for Global Data at: %08lx\n",
+	debug("Reserving %zu Bytes for Global Data at: %08lx\n", /// 176 8777af00
 	      sizeof(gd_t), gd->start_addr_sp);
 	return 0;
 }
@@ -547,10 +547,10 @@ static int reserve_fdt(void)
 	 * will be relocated with other data.
 	 */
 	gd->fdt_size = CONFIG_FDT_FLASH_SIZE; /// 默认的是0x20000
-	gd->start_addr_sp -= gd->fdt_size; /// 堆栈区往下减，留位置给fdt
+	gd->start_addr_sp -= gd->fdt_size;
 	gd->start_addr_sp &= ~0x7f;
 	gd->new_fdt = map_sysmem(gd->start_addr_sp, gd->fdt_size);
-	debug("Reserving %lu Bytes for FDT at: %08lx\n",
+	debug("Reserving %lu Bytes for FDT at: %08lx\n", /// 131072(0x20000) 8775af00
 		gd->fdt_size, gd->start_addr_sp);
 
 #endif
@@ -580,14 +580,14 @@ __weak int arch_reserve_stacks(void)
 static int reserve_stacks(void)
 {
 	/* make stack pointer 16-byte aligned */
-	gd->start_addr_sp -= 16;
-	gd->start_addr_sp &= ~0xf;
+	gd->start_addr_sp -= 16; /// 8775af00 - 16 = 8775aef0
+	gd->start_addr_sp &= ~0xf; /// 8775aef0
 
 	/*
 	 * let the architecture-specific code tailor gd->start_addr_sp and
 	 * gd->irq_sp
 	 */
-	return arch_reserve_stacks();
+	return arch_reserve_stacks(); /// arch/arm/lib gd->irq_sp = gd->start_addr_sp = 8775aef0; gd->start_addr_sp -= 16 = 8775aee0
 }
 
 static int reserve_bloblist(void)
@@ -735,7 +735,7 @@ static int setup_reloc(void)
 
 #ifdef CONFIG_SYS_TEXT_BASE
 #ifdef ARM
-	gd->reloc_off = gd->relocaddr - (unsigned long)__image_copy_start;
+	gd->reloc_off = gd->relocaddr - (unsigned long)__image_copy_start; /// 计算reloc偏移量
 #elif defined(CONFIG_M68K)
 	/*
 	 * On all ColdFire arch cpu, monitor code starts always
@@ -746,10 +746,10 @@ static int setup_reloc(void)
 	gd->reloc_off = gd->relocaddr - CONFIG_SYS_TEXT_BASE;
 #endif
 #endif
-	memcpy(gd->new_gd, (char *)gd, sizeof(gd_t));
+	memcpy(gd->new_gd, (char *)gd, sizeof(gd_t)); /// 将旧的global_data拷贝到新地址
 
-	debug("Relocation Offset is: %08lx\n", gd->reloc_off);
-	debug("Relocating to %08lx, new gd at %08lx, sp at %08lx\n",
+	debug("Relocation Offset is: %08lx\n", gd->reloc_off); /// 0x57bb000
+	debug("Relocating to %08lx, new gd at %08lx, sp at %08lx\n", /// 0x87fbb000 0x8777af00 0x8775aee0
 	      gd->relocaddr, (ulong)map_to_sysmem(gd->new_gd),
 	      gd->start_addr_sp);
 
@@ -873,83 +873,83 @@ __weak int clear_bss(void)
 }
 
 static const init_fnc_t init_sequence_f[] = {
-	setup_mon_len,
+	setup_mon_len, /// yes
 #ifdef CONFIG_OF_CONTROL
-	fdtdec_setup,
+	fdtdec_setup, /// 3917 skip, 3923 yes
 #endif
-#ifdef CONFIG_TRACE_EARLY
+#ifdef CONFIG_TRACE_EARLY /// skip
 	trace_early_init,
 #endif
-	initf_malloc,
-	log_init,
-	initf_bootstage,	/* uses its own timer, so does not need DM */
+	initf_malloc, /// skip SYS_MALLOC_F_LEN未定义
+	log_init, /// yes
+	initf_bootstage,	/* uses its own timer, so does not need DM */ /// skip CONFIG_BOOTSTAGE未定义
 #ifdef CONFIG_BLOBLIST
-	bloblist_init,
+	bloblist_init, /// skip
 #endif
-	setup_spl_handoff,
-	initf_console_record,
+	setup_spl_handoff, /// skip
+	initf_console_record, /// skip
 #if defined(CONFIG_HAVE_FSP)
-	arch_fsp_init,
+	arch_fsp_init, /// skip
 #endif
-	arch_cpu_init,		/* basic arch cpu dependent setup */
-	mach_cpu_init,		/* SoC/machine dependent CPU setup */
-	initf_dm,
-	arch_cpu_init_dm,
-#if defined(CONFIG_BOARD_EARLY_INIT_F)
+	arch_cpu_init,		/* basic arch cpu dependent setup */ /// skip 未定义.
+	mach_cpu_init,		/* SoC/machine dependent CPU setup */ /// skip 未定义.
+	initf_dm, /// skip. SYS_MALLOC_F_LEN未定义
+	arch_cpu_init_dm, /// skip
+#if defined(CONFIG_BOARD_EARLY_INIT_F) /// skip
 	board_early_init_f,
 #endif
-#if defined(CONFIG_PPC) || defined(CONFIG_SYS_FSL_CLK) || defined(CONFIG_M68K)
+#if defined(CONFIG_PPC) || defined(CONFIG_SYS_FSL_CLK) || defined(CONFIG_M68K) /// skip
 	/* get CPU and bus clocks according to the environment variable */
 	get_clocks,		/* get CPU and bus clocks (etc.) */
 #endif
 #if !defined(CONFIG_M68K)
-	timer_init,		/* initialize timer */
+	timer_init,		/* initialize timer */ ///yes arch/arm/cpu/armv7/arch_timer.c
 #endif
-#if defined(CONFIG_BOARD_POSTCLK_INIT)
+#if defined(CONFIG_BOARD_POSTCLK_INIT) /// skip
 	board_postclk_init,
 #endif
-	env_init,		/* initialize environment */
-	init_baud_rate,		/* initialze baudrate settings */
-	serial_init,		/* serial communications setup */
-	console_init_f,		/* stage 1 init of console */
-	display_options,	/* say that we are here */
-	display_text_info,	/* show debugging info if required */
-	checkcpu,
-#if defined(CONFIG_SYSRESET)
+	env_init,		/* initialize environment */ ///yes env/env.c
+	init_baud_rate,		/* initialze baudrate settings */ /// 从环境变量中读baud_rate存入gd->baudrate
+	serial_init,	/// driver/serial/serial.c dev = default_serial_console(); rts3917 serial.c中定义了这个函数 再调用.start初始化;
+	console_init_f,		/* stage 1 init of console */ /// console.c CONFIG_PRE_CONSOLE_BUFFER没定义，return 0
+	display_options,	/* say that we are here */ /// 打印 U-Boot 2020.04 (Apr 03 2023 - 13:43:40 +0800)
+	display_text_info,	/* show debugging info if required */ /// 开启debug会打印u-boot代码段起始位置
+	checkcpu, /// 未定义return 0
+#if defined(CONFIG_SYSRESET) /// skip
 	print_resetinfo,
 #endif
-#if defined(CONFIG_DISPLAY_CPUINFO)
-	print_cpuinfo,		/* display cpu info (and speed) */ /// skip
+#if defined(CONFIG_DISPLAY_CPUINFO) /// skip
+	print_cpuinfo,		/* display cpu info (and speed) */
 #endif
-#if defined(CONFIG_DTB_RESELECT)
+#if defined(CONFIG_DTB_RESELECT) /// skip
 	embedded_dtb_select,
 #endif
-#if defined(CONFIG_DISPLAY_BOARDINFO) /// yes 打印CPU: BOARD: board_info.c软定义 然后跳到rlxboard.c
+#if defined(CONFIG_DISPLAY_BOARDINFO) /// yes 打印BOARD: CPU: board_info.c软定义 然后跳到rlxboard.c
 	show_board_info,
 #endif
-	INIT_FUNC_WATCHDOG_INIT
-#if defined(CONFIG_MISC_INIT_F)
+	INIT_FUNC_WATCHDOG_INIT /// skip
+#if defined(CONFIG_MISC_INIT_F) /// skip
 	misc_init_f,
 #endif
-	INIT_FUNC_WATCHDOG_RESET
-#if defined(CONFIG_SYS_I2C)
+	INIT_FUNC_WATCHDOG_RESET /// skip
+#if defined(CONFIG_SYS_I2C) /// skip
 	init_func_i2c,
 #endif
-#if defined(CONFIG_VID) && !defined(CONFIG_SPL)
+#if defined(CONFIG_VID) && !defined(CONFIG_SPL) /// skip
 	init_func_vid,
 #endif
-	announce_dram_init,
-	dram_init,		/* configure available RAM banks */
-#ifdef CONFIG_POST
+	announce_dram_init, /// yes
+	dram_init,		/* configure available RAM banks */ /// rlxboard.c 初始化dram
+#ifdef CONFIG_POST /// skip
 	post_init_f,
 #endif
 	INIT_FUNC_WATCHDOG_RESET
-#if defined(CONFIG_SYS_DRAM_TEST)
+#if defined(CONFIG_SYS_DRAM_TEST) /// skip
 	testdram,
 #endif /* CONFIG_SYS_DRAM_TEST */
 	INIT_FUNC_WATCHDOG_RESET
 
-#ifdef CONFIG_POST
+#ifdef CONFIG_POST /// skip
 	init_post,
 #endif
 	INIT_FUNC_WATCHDOG_RESET
@@ -965,49 +965,51 @@ static const init_fnc_t init_sequence_f[] = {
 	 *  - monitor code
 	 *  - board info struct
 	 */
-	setup_dest_addr,
-#ifdef CONFIG_PRAM
+	/// 以rts3917 armv7 为例
+	setup_dest_addr, /// 分配gd->ram_top顶端地址, gd->relocaddr=gd->ram_top=0x88000000 U-boot代码段起始位置
+#ifdef CONFIG_PRAM /// skip
 	reserve_pram,
 #endif
 	reserve_round_4k,
 #ifdef CONFIG_ARM
-	reserve_mmu,
+	reserve_mmu, // gd->arch.tlb_addr = gd->relocaddr = 0x87ff0000
 #endif
-	reserve_video,
-	reserve_trace,
-	reserve_uboot,
-	reserve_malloc,
-	reserve_board,
-	setup_machine,
-	reserve_global_data,
-	reserve_fdt,
-	reserve_bootstage,
-	reserve_bloblist,
-	reserve_arch,
-	reserve_stacks,
-	dram_init_banksize,
-	show_dram_config,
+	reserve_video, /// skip 没定义CONFIG_DM_VIDEO or CONFIG_LCD
+	reserve_trace, /// skip 没定义CONFIG_TRACE
+	reserve_uboot, /// gd->start_addr_sp = gd->relocaddr=87fbb000;
+	reserve_malloc, /// gd->start_addr_sp = 0x8777b000
+	reserve_board, /// gd->bd = gd->start_addr_sp = 0x8777afb0
+	setup_machine, /// mach id = 100 rlxboard.h
+	reserve_global_data, /// gd->new_gd = gd->start_addr_sp = 0x8777af00
+	reserve_fdt, /// gd->new_fdt = gd->start_addr_sp = 0x8775af00
+	reserve_bootstage, /// skip
+	reserve_bloblist, /// skip
+	reserve_arch, /// skip
+	reserve_stacks, /// gd->start_addr_sp = 8775aee0
+	dram_init_banksize, /// yes
+	show_dram_config, /// yes
 #if defined(CONFIG_M68K) || defined(CONFIG_MIPS) || defined(CONFIG_PPC) || \
 	defined(CONFIG_SH)
-	setup_board_part1,
+	setup_board_part1, /// skip
 #endif
 #if defined(CONFIG_PPC) || defined(CONFIG_M68K)
-	INIT_FUNC_WATCHDOG_RESET
-	setup_board_part2,
+	INIT_FUNC_WATCHDOG_RESET /// skip
+	setup_board_part2, /// skip
 #endif
-	display_new_sp,
+	display_new_sp, /// print gd->start_addr_sp = 8775aee0
 #ifdef CONFIG_OF_BOARD_FIXUP
-	fix_fdt,
+	fix_fdt, /// skip
 #endif
 	INIT_FUNC_WATCHDOG_RESET
-	reloc_bootstage,
-	reloc_bloblist,
-	setup_reloc,
+	reloc_fdt, /// relocate fdt 到gd->new_fdt
+	reloc_bootstage, /// skip
+	reloc_bloblist, /// skip
+	setup_reloc, /// 计算relocate偏移量,拷贝global_data到新地址
 #if defined(CONFIG_X86) || defined(CONFIG_ARC)
 	copy_uboot_to_ram,
 	do_elf_reloc_fixups,
 #endif
-	clear_bss,
+	clear_bss, /// skip
 #if !defined(CONFIG_ARM) && !defined(CONFIG_SANDBOX) && \
 		!CONFIG_IS_ENABLED(X86_64)
 	jump_to_copy,

@@ -1206,7 +1206,7 @@ __weak void *board_fdt_blob_setup(void)
 		fdt_blob = (ulong *)&__bss_end;
 #else
 	/* FDT is at end of image */
-	fdt_blob = (ulong *)&_end;
+	fdt_blob = (ulong *)&_end; /// fdt接在uboot image后面
 #endif
 	return fdt_blob;
 }
@@ -1481,7 +1481,7 @@ int fdtdec_setup(void)
 #  endif
 # elif defined(CONFIG_OF_BOARD) || defined(CONFIG_OF_SEPARATE)
 	/* Allow the board to override the fdt address. */
-	gd->fdt_blob = board_fdt_blob_setup();
+	gd->fdt_blob = board_fdt_blob_setup(); /// 设置fdt位置
 # elif defined(CONFIG_OF_HOSTFILE)
 	if (sandbox_read_fdt_from_file()) {
 		puts("Failed to read control FDT\n");
@@ -1493,7 +1493,7 @@ int fdtdec_setup(void)
 # ifndef CONFIG_SPL_BUILD
 	/* Allow the early environment to override the fdt address */
 	gd->fdt_blob = map_sysmem
-		(env_get_ulong("fdtcontroladdr", 16,
+		(env_get_ulong("fdtcontroladdr", 16, /// 可以设置fdt的地址直接加载 ??? 此时env还没初始化为什么可以读
 			       (unsigned long)map_to_sysmem(gd->fdt_blob)), 0);
 # endif
 

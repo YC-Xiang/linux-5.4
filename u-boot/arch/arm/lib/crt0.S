@@ -103,7 +103,7 @@ ENTRY(_main)
 #endif
 	bic	r0, r0, #7	/* 8-byte alignment for ABI compliance */
 	mov	sp, r0 /// 先设置sp为0x80100000,调用board_init_f_alloc_reserver
-	bl	board_init_f_alloc_reserve ///r0=0x80100000 作为board_init_f_alloc_reserve的参数传入，处理完后r0=0x80100000-sizeof(global_data)
+	bl	board_init_f_alloc_reserve /// 分配global data 空间。r0=0x80100000 作为board_init_f_alloc_reserve的参数传入，处理完后r0=0x80100000-sizeof(global_data)
 	mov	sp, r0 /// 再设置sp为0x80100000-sizeof(global_data)，这样栈就不会把global_data数据干扰到了
 	/* set up gd here, outside any C code */
 	mov	r9, r0
@@ -131,20 +131,20 @@ ENTRY(_main)
  * 'here' but relocated.
  */
 
-	ldr	r0, [r9, #GD_START_ADDR_SP]	/* sp = gd->start_addr_sp */
+	ldr	r0, [r9, #GD_START_ADDR_SP]	/* sp = gd->start_addr_sp */ /// gd->start_addr_sp保存reloc后规划的sp新地址
 	bic	r0, r0, #7	/* 8-byte alignment for ABI compliance */
-	mov	sp, r0
+	mov	sp, r0 /// 设置新的堆栈空间
 	ldr	r9, [r9, #GD_BD]		/* r9 = gd->bd */
 	sub	r9, r9, #GD_SIZE		/* new GD is below bd */
 
 	adr	lr, here
-	ldr	r0, [r9, #GD_RELOC_OFF]		/* r0 = gd->reloc_off */
+	ldr	r0, [r9, #GD_RELOC_OFF]		/* r0 = gd->reloc_off */ /// relocate_code后here的地址等于here+reloc_off(新地址相对于新地址的偏移)
 	add	lr, lr, r0
 #if defined(CONFIG_CPU_V7M)
 	orr	lr, #1				/* As required by Thumb-only */
 #endif
 	ldr	r0, [r9, #GD_RELOCADDR]		/* r0 = gd->relocaddr */
-	b	relocate_code
+	b	relocate_code /// uboot relocate
 here:
 /*
  * now relocate vectors
@@ -159,7 +159,7 @@ here:
 #if !defined(CONFIG_SPL_BUILD) || CONFIG_IS_ENABLED(FRAMEWORK)
 
 #if !defined(CONFIG_SPL_EARLY_BSS)
-	SPL_CLEAR_BSS
+	SPL_CLEAR_BSS // 清bss段
 #endif
 
 # ifdef CONFIG_SPL_BUILD
@@ -171,11 +171,11 @@ here:
 # endif
 
 #if ! defined(CONFIG_SPL_BUILD)
-	bl coloured_LED_init
-	bl red_led_on
+	bl coloured_LED_init /// skip
+	bl red_led_on /// skip
 #endif
 	/* call board_init_r(gd_t *id, ulong dest_addr) */
-	mov     r0, r9                  /* gd_t */
+	mov     r0, r9                  /* gd_t */ // ??? r9 应该保存的还是老的global_data?地址为0x80100000-sizeof(global_data)
 	ldr	r1, [r9, #GD_RELOCADDR]	/* dest_addr */
 	/* call board_init_r */
 #if CONFIG_IS_ENABLED(SYS_THUMB_BUILD)
