@@ -780,7 +780,7 @@ static init_fnc_t init_sequence_r[] = {
 #endif
 	initr_dm_devices, /// skip 没定义CONFIG_TIMER_EARLY
 	stdio_init_tables, ///初始化链表stdio_dev devs.list INIT_LIST_HEAD(&(devs.list));
-	initr_serial, /// 真正初始化串口在board_f.c,这里把serial_current赋值为default_serial_console rlxboard_serial_drv
+	initr_serial, /// 真正初始化串口在board_f.c,这里把serial_current赋值为default_serial_console(rlxboard_serial_drv), 以后会使用标准输入输出设备进行输出，但最终也是会调用到串口设备进行输出。
 	initr_announce, /// debug info
 #if CONFIG_IS_ENABLED(WDT)
 	initr_watchdog, /// skip
@@ -864,7 +864,7 @@ static init_fnc_t init_sequence_r[] = {
 	initr_api, /// skip
 #endif
 #ifndef CONFIG_FAST_BOOT
-	console_init_r,		/* fully init console as a device */
+	console_init_r,		/* fully init console as a device */ ///将console和标准输入输出设备关联
 #endif
 #ifdef CONFIG_DISPLAY_BOARDINFO_LATE
 	console_announce_r, /// skip

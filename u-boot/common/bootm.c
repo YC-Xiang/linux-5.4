@@ -103,7 +103,7 @@ static int bootm_find_os(cmd_tbl_t *cmdtp, int flag, int argc,
 		images.os.os = image_get_os(os_hdr); /// Linux
 
 		images.os.end = image_get_image_end(os_hdr); /// kernel image结束地址
-		images.os.load = image_get_load(os_hdr); /// ??? 0x81000000 加载地址?
+		images.os.load = image_get_load(os_hdr); /// 0x81000000 加载地址
 		images.os.arch = image_get_arch(os_hdr); /// ARM
 		break;
 #endif
@@ -251,7 +251,7 @@ int bootm_find_images(int flag, int argc, char * const argv[])
 #if IMAGE_ENABLE_OF_LIBFDT
 	/* find flattened device tree */
 	ret = boot_get_fdt(flag, argc, argv, IH_ARCH_DEFAULT, &images,
-			   &images.ft_addr, &images.ft_len);
+			   &images.ft_addr, &images.ft_len); /// 获取fdt地址和长度
 	if (ret) {
 		puts("Could not find a valid device tree\n");
 		return 1;
@@ -341,7 +341,7 @@ static int handle_decomp_error(int comp_type, size_t uncomp_size, int ret)
 static int bootm_load_os(bootm_headers_t *images, int boot_progress)
 {
 	image_info_t os = images->os;
-	ulong load = os.load;
+	ulong load = os.load; /// kernel image加载地址
 	ulong load_end;
 	ulong blob_start = os.start; /// 包括kernel image头部信息
 	ulong blob_end = os.end;
@@ -356,10 +356,10 @@ static int bootm_load_os(bootm_headers_t *images, int boot_progress)
 #endif
 
 	load_buf = map_sysmem(load, 0);
-	image_buf = map_sysmem(os.image_start, image_len);
+	image_buf = map_sysmem(os.image_start, image_len); /// c0000 + sizeof(image_header)
 	err = image_decomp(os.comp, load, os.image_start, os.type,
 			   load_buf, image_buf, image_len,
-			   CONFIG_SYS_BOOTM_LEN, &load_end);
+			   CONFIG_SYS_BOOTM_LEN, &load_end); /// 这里拷贝了kernel
 	if (err) {
 		err = handle_decomp_error(os.comp, load_end - load, err);
 		bootstage_error(BOOTSTAGE_ID_DECOMP_IMAGE);
@@ -570,7 +570,7 @@ int do_bootm_states(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[],
 		}
 	}
 #endif
-#if IMAGE_ENABLE_OF_LIBFDT && defined(CONFIG_LMB)
+#if IMAGE_ENABLE_OF_LIBFDT && defined(CONFIG_LMB) /// skip 未定义BOOTM_STATE_FDT
 	if (!ret && (states & BOOTM_STATE_FDT)) {
 		boot_fdt_add_mem_rsv_regions(&images->lmb, images->ft_addr);
 		ret = boot_relocate_fdt(&images->lmb, &images->ft_addr,
@@ -581,7 +581,7 @@ int do_bootm_states(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[],
 	/* From now on, we need the OS boot function */
 	if (ret)
 		return ret;
-	boot_fn = bootm_os_get_boot_func(images->os.os);
+	boot_fn = bootm_os_get_boot_func(images->os.os); /// 返回do_bootm_linux()
 	need_boot_fn = states & (BOOTM_STATE_OS_CMDLINE |
 			BOOTM_STATE_OS_BD_T | BOOTM_STATE_OS_PREP |
 			BOOTM_STATE_OS_FAKE_GO | BOOTM_STATE_OS_GO);
@@ -605,7 +605,7 @@ int do_bootm_states(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[],
 		if (images->os.os == IH_OS_LINUX)
 			fixup_silent_linux();
 #endif
-		ret = boot_fn(BOOTM_STATE_OS_PREP, argc, argv, images);
+		ret = boot_fn(BOOTM_STATE_OS_PREP, argc, argv, images); /// this way 调用 do_bootm_linux
 	}
 
 #ifdef CONFIG_TRACE
@@ -724,7 +724,7 @@ static const void *boot_get_kernel(cmd_tbl_t *cmdtp, int flag, int argc,
 #if IMAGE_ENABLE_FIT
 	int		os_noffset;
 #endif
-/// 获取kernel地址(argv[0]), {kernel_offset} 在board_r.c中从设备树中获取kernel地址，然后设置环境变量kernel_offset
+/// 获取kernel地址(argv[0]), argv[0]={kernel_offset} 在board_r.c中从设备树中获取kernel地址，然后设置环境变量kernel_offset
 	img_addr = genimg_get_kernel_addr_fit(argc < 1 ? NULL : argv[0],
 					      &fit_uname_config,
 					      &fit_uname_kernel);
@@ -812,7 +812,7 @@ static const void *boot_get_kernel(cmd_tbl_t *cmdtp, int flag, int argc,
 		return NULL;
 	}
 
-	debug("   kernel data at 0x%08lx, len = 0x%08lx (%ld)\n",
+	debug("   kernel data at 0x%08lx, len = 0x%08lx (%ld)\n", /// c0040
 	      *os_data, *os_len, *os_len);
 
 	return buf;

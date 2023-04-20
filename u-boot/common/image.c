@@ -440,7 +440,7 @@ int image_decomp(int comp, ulong load, ulong image_start, int type,
 				memmove_wd(load_buf, image_buf, image_len,
 					   CHUNKSZ);
 			else
-				dma_copy(image_start, load, image_len);
+				dma_copy(image_start, load, image_len); /// 将kernel从0xc0040拷贝到0x80100000
 				//memmove_wd(load_buf, image_start, image_len,
 				//	   CHUNKSZ);
 		}
@@ -1727,11 +1727,11 @@ int image_setup_linux(bootm_headers_t *images)
 	int ret;
 
 	if (IMAGE_ENABLE_OF_LIBFDT)
-		boot_fdt_add_mem_rsv_regions(lmb, *of_flat_tree);
+		boot_fdt_add_mem_rsv_regions(lmb, *of_flat_tree); /// mark fdt中的reserved-memory
 #ifdef CONFIG_DUAL_KERNEL_LOAD_CHECK
 		boot_fdt_set_new_bootargs(*of_flat_tree);
 #endif
-	if (IMAGE_BOOT_GET_CMDLINE) {
+	if (IMAGE_BOOT_GET_CMDLINE) { /// skip
 		ret = boot_get_cmdline(lmb, &images->cmdline_start,
 				&images->cmdline_end);
 		if (ret) {
@@ -1741,7 +1741,7 @@ int image_setup_linux(bootm_headers_t *images)
 	}
 
 	if (IMAGE_ENABLE_OF_LIBFDT) {
-		ret = boot_relocate_fdt(lmb, of_flat_tree, &of_size);
+		ret = boot_relocate_fdt(lmb, of_flat_tree, &of_size); /// 再次relocate fdt 不过因为rlxboard.h中定义fdt_high=0xffffffff所以不用relocate，直接用in place的fdt
 		if (ret)
 			return ret;
 	}

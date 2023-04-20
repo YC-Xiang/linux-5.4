@@ -152,11 +152,12 @@ void dma_copy_dtb_to_ddr(const char *label)
 	if (dtb_len % 8)
 		dtb_len = (dtb_len / 8) * 8 + 8;
 
-	image_start = env_get_hex(label, CONFIG_FDT_FLASH_ADDR); // label="dtb_offset"0xa0000需要update dtb之后才能正确获取. 否则得到CONFIG_FDT_FLASH_ADDR=0x80000不对。
+	/// label="dtb_offset"0xa0000需要update dtb之后才会设置(在cmd_update.c中设置该环境变量). 否则得到CONFIG_FDT_FLASH_ADDR=0x80000不对。
+	image_start = env_get_hex(label, CONFIG_FDT_FLASH_ADDR);
 #ifdef CONFIG_FIT
 	image_start += 0x04000000;
 #endif
-	dma_copy(image_start, load, dtb_len);
+	dma_copy(image_start, load, dtb_len); /// 拷贝dtb
 	flush_cache(load, ALIGN(dtb_len, ARCH_DMA_MINALIGN));
 }
 

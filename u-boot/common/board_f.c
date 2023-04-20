@@ -127,7 +127,7 @@ __weak void board_add_ram_info(int use_default)
 
 static int init_baud_rate(void)
 {
-	gd->baudrate = env_get_ulong("baudrate", 10, CONFIG_BAUDRATE); /// CONFIG_BAUDRATE 在Kconfig中默认为115200
+	gd->baudrate = env_get_ulong("baudrate", 10, CONFIG_BAUDRATE); /// CONFIG_BAUDRATE 在Kconfig中默认为115200, rlxboard serial.c中直接写57600 baudrate. 所以这边这个baudrate没用。
 	return 0;
 }
 
