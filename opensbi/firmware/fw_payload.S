@@ -45,7 +45,7 @@ fw_save_info:
 	 */
 fw_next_arg1:
 #ifdef FW_PAYLOAD_FDT_ADDR
-	li	a0, FW_PAYLOAD_FDT_ADDR
+	li	a0, FW_PAYLOAD_FDT_ADDR /// 0xC1f00000
 #else
 	add	a0, a1, zero
 #endif
@@ -93,5 +93,5 @@ payload_bin:
 	wfi
 	j	payload_bin
 #else
-	.incbin	FW_PAYLOAD_PATH
+	.incbin	FW_PAYLOAD_PATH /// 把kernel image 加载到.payload段
 #endif

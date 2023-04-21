@@ -170,7 +170,7 @@ _bss_zero:
 
 	/* Setup temporary trap handler */
 	la	s4, _start_hang
-	csrw	CSR_MTVEC, s4 /// 设置此时中断和异常地址是_start_hang
+	csrw	CSR_MTVEC, s4 /// 设置此时中断和异常地址是_start_hang, 此时发生中断和异常会hang住
 
 	/* Setup temporary stack */
 	la	s4, _fw_end
@@ -226,7 +226,7 @@ _scratch_init:
 	mul	a5, s8, t1
 	sub	tp, tp, a5
 	li	a5, SBI_SCRATCH_SIZE
-	sub	tp, tp, a5
+	sub	tp, tp, a5 /// tp = _fw_end + hard_count * hard_stack_size - SBI_SCRATCH_SIZE.
 
 	/* Initialize scratch space */
 	/* Store fw_start and fw_size in scratch space */
@@ -235,37 +235,37 @@ _scratch_init:
 	mul	t0, s7, s8
 	add	a5, a5, t0
 	sub	a5, a5, a4
-	REG_S	a4, SBI_SCRATCH_FW_START_OFFSET(tp)
-	REG_S	a5, SBI_SCRATCH_FW_SIZE_OFFSET(tp)
+	REG_S	a4, SBI_SCRATCH_FW_START_OFFSET(tp) ///_fw_start传入sbi_scratch->fw_start
+	REG_S	a5, SBI_SCRATCH_FW_SIZE_OFFSET(tp) /// size传入sbi_scratch->fw_size
 	/* Store next arg1 in scratch space */
 	MOV_3R	s0, a0, s1, a1, s2, a2
 	call	fw_next_arg1
-	REG_S	a0, SBI_SCRATCH_NEXT_ARG1_OFFSET(tp)
+	REG_S	a0, SBI_SCRATCH_NEXT_ARG1_OFFSET(tp) /// 把设备树地址传入sbi_scratch->next_arg1(next booting stage的arg,即a1 register)
 	MOV_3R	a0, s0, a1, s1, a2, s2
 	/* Store next address in scratch space */
 	MOV_3R	s0, a0, s1, a1, s2, a2
 	call	fw_next_addr
-	REG_S	a0, SBI_SCRATCH_NEXT_ADDR_OFFSET(tp)
+	REG_S	a0, SBI_SCRATCH_NEXT_ADDR_OFFSET(tp) /// payload_bin地址传入sbi_scratch->next_addr(next booting stage) payload_bin=FW_PAYLOAD_PATH 在命令行传入
 	MOV_3R	a0, s0, a1, s1, a2, s2
 	/* Store next mode in scratch space */
 	MOV_3R	s0, a0, s1, a1, s2, a2
 	call	fw_next_mode
-	REG_S	a0, SBI_SCRATCH_NEXT_MODE_OFFSET(tp)
+	REG_S	a0, SBI_SCRATCH_NEXT_MODE_OFFSET(tp) /// 把Smode传入sbi_scratch->next_mode
 	MOV_3R	a0, s0, a1, s1, a2, s2
 	/* Store warm_boot address in scratch space */
 	la	a4, _start_warm
-	REG_S	a4, SBI_SCRATCH_WARMBOOT_ADDR_OFFSET(tp)
+	REG_S	a4, SBI_SCRATCH_WARMBOOT_ADDR_OFFSET(tp) /// _start_warm传入sbi_scratch->warmboot_addr
 	/* Store platform address in scratch space */
 	la	a4, platform
-	REG_S	a4, SBI_SCRATCH_PLATFORM_ADDR_OFFSET(tp)
+	REG_S	a4, SBI_SCRATCH_PLATFORM_ADDR_OFFSET(tp) /// platform传入sbi_scratch->platform_addr
 	/* Store hartid-to-scratch function address in scratch space */
 	la	a4, _hartid_to_scratch
-	REG_S	a4, SBI_SCRATCH_HARTID_TO_SCRATCH_OFFSET(tp)
+	REG_S	a4, SBI_SCRATCH_HARTID_TO_SCRATCH_OFFSET(tp) /// _hartid_to_scratch传入sbi_scratch->hartid_to_scratch
 	/* Store trap-exit function address in scratch space */
 	la	a4, _trap_exit
-	REG_S	a4, SBI_SCRATCH_TRAP_EXIT_OFFSET(tp)
+	REG_S	a4, SBI_SCRATCH_TRAP_EXIT_OFFSET(tp) /// _trap_exit传入sbi_scratch->trap_exit
 	/* Clear tmp0 in scratch space */
-	REG_S	zero, SBI_SCRATCH_TMP0_OFFSET(tp)
+	REG_S	zero, SBI_SCRATCH_TMP0_OFFSET(tp) /// 0传入sbi_scratch->tmp0
 	/* Store firmware options in scratch space */
 	MOV_3R	s0, a0, s1, a1, s2, a2
 #ifdef FW_OPTIONS
@@ -276,8 +276,8 @@ _scratch_init:
 	REG_S	a0, SBI_SCRATCH_OPTIONS_OFFSET(tp)
 	MOV_3R	a0, s0, a1, s1, a2, s2
 	/* Move to next scratch space */
-	add	t1, t1, t2
-	blt	t1, s7, _scratch_init
+	add	t1, t1, t2 /// t1 = 0 + 1 = 1
+	blt	t1, s7, _scratch_init /// 如果hart count > 1, 接着初始化另一个sbi_scratch
 
 	/*
 	 * Relocate Flatened Device Tree (FDT)
@@ -287,13 +287,13 @@ _scratch_init:
 	 * Note: We will preserve a0 and a1 passed by
 	 * previous booting stage.
 	 */
-	beqz	a1, _fdt_reloc_done
+	beqz	a1, _fdt_reloc_done /// a1是设备树地址fw_fdt_bin c000f000。187定义了
 	/* Mask values in a3 and a4 */
 	li	a3, ~(__SIZEOF_POINTER__ - 1)
 	li	a4, 0xff
 	/* t1 = destination FDT start address */
 	MOV_3R	s0, a0, s1, a1, s2, a2
-	call	fw_next_arg1
+	call	fw_next_arg1 /// a0传入FW_PAYLOAD_FDT_ADDR 0xC1f00000 在platform/realtek/sheipa/config.mk中定义，为fdt relocate地址。
 	add	t1, a0, zero
 	MOV_3R	a0, s0, a1, s1, a2, s2
 	beqz	t1, _fdt_reloc_done
@@ -346,7 +346,7 @@ _fdt_reloc_done:
 	la	t1, _boot_status
 	REG_S	t0, 0(t1)
 	fence	rw, rw
-	j	_start_warm
+	j	_start_warm /// 初始化第二个cpu核心
 
 	/* waiting for boot hart to be done (_boot_status == 2) */
 _wait_for_boot_hart:
@@ -424,7 +424,7 @@ _start_warm:
 	la	a4, _trap_handler_rv32_hyp
 _skip_trap_handler_rv32_hyp:
 #endif
-	csrw	CSR_MTVEC, a4 /// 对a4中每个置1的位，将CSR_MTVEC也置1. CSR_MTVEC存储中断或异常入口地址
+	csrw	CSR_MTVEC, a4 /// 存储中断或异常入口地址_trap_handler
 
 #if __riscv_xlen == 32
 	/* Override trap exit for H-extension */
