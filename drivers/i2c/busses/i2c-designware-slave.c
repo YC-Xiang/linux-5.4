@@ -6,6 +6,7 @@
  *
  * Copyright (C) 2016 Synopsys Inc.
  */
+#define DEBUG
 #include <linux/delay.h>
 #include <linux/err.h>
 #include <linux/errno.h>
@@ -156,6 +157,120 @@ static u32 i2c_dw_read_clear_intrbits_slave(struct dw_i2c_dev *dev)
  * occurs.
  */
 
+/*
+	testi2c_device.c，抓取log。
+
+	写12bytes
+	INTR_STAT=0x4 DW_IC_INTR_RX_FULL /// master write，触发rx_full中断，在这个中断里处理完所有写操作
+	INTR_STAT=0x200 DW_IC_INTR_STOP_DET /// master发出stop信号
+
+	读12bytes
+	INTR_STAT=0x224 DW_IC_INTR_RX_FULL DW_IC_INTR_STOP_DET DW_IC_INTR_RD_REQ 这里不知道为什么DW_IC_INTR_RX_FULL DW_IC_INTR_STOP_DET没被清掉，好像不清掉也没影响
+	INTR_STAT=0x20
+	INTR_STAT=0x20
+	INTR_STAT=0x20
+	INTR_STAT=0x20
+	INTR_STAT=0x20
+	INTR_STAT=0x20
+	INTR_STAT=0x20
+	INTR_STAT=0x20
+	INTR_STAT=0x20
+	INTR_STAT=0x20
+	INTR_STAT=0x20
+
+	写12bytes
+	INTR_STAT=0x200 DW_IC_INTR_STOP_DET
+	INTR_STAT=0x204 DW_IC_INTR_STOP_DET DW_IC_INTR_RX_FULL
+
+	读12bytes
+	INTR_STAT=0x224
+	INTR_STAT=0x20
+	INTR_STAT=0x20
+	INTR_STAT=0x20
+	INTR_STAT=0x20
+	INTR_STAT=0x20
+	INTR_STAT=0x20
+	INTR_STAT=0x20
+	INTR_STAT=0x20
+	INTR_STAT=0x20
+	INTR_STAT=0x20
+	INTR_STAT=0x20
+
+	写12bytes
+	INTR_STAT=0x200
+	INTR_STAT=0x204
+	...
+
+	代码流程:
+	0x04中断：
+	if (stat & DW_IC_INTR_RX_FULL) {
+		if (!(dev->status & STATUS_WRITE_IN_PROGRESS)) {
+			dev->status |= STATUS_WRITE_IN_PROGRESS;
+			dev->status &= ~STATUS_READ_IN_PROGRESS;
+			i2c_slave_event(dev->slave, I2C_SLAVE_WRITE_REQUESTED,
+					&val);
+		}
+
+		do {
+			regmap_read(dev->map, DW_IC_DATA_CMD, &tmp);
+			val = tmp;
+			i2c_slave_event(dev->slave, I2C_SLAVE_WRITE_RECEIVED,
+					&val);
+			regmap_read(dev->map, DW_IC_STATUS, &tmp);
+		} while (tmp & DW_IC_STATUS_RFNE);
+	}
+
+	0x200:
+	if (stat & DW_IC_INTR_STOP_DET)
+		i2c_slave_event(dev->slave, I2C_SLAVE_STOP, &val); /// eeprom->idx_write_cnt = 0;
+
+	0x204:
+	下面
+	// if (stat & DW_IC_INTR_RX_FULL) {
+	// 	if (!(dev->status & STATUS_WRITE_IN_PROGRESS)) {/// dev->status & STATUS_WRITE_IN_PROGRESS == 1 跳过
+	// 		dev->status |= STATUS_WRITE_IN_PROGRESS;
+	// 		dev->status &= ~STATUS_READ_IN_PROGRESS;
+	// 		i2c_slave_event(dev->slave, I2C_SLAVE_WRITE_REQUESTED,
+	// 				&val);
+	// 	}
+
+	// 	do {
+	// 		regmap_read(dev->map, DW_IC_DATA_CMD, &tmp); /// tmp=0?
+	// 		val = tmp;
+	// 		i2c_slave_event(dev->slave, I2C_SLAVE_WRITE_RECEIVED,
+	// 				&val);
+	// 		regmap_read(dev->map, DW_IC_STATUS, &tmp);
+	// 	} while (tmp & DW_IC_STATUS_RFNE);
+	// }
+
+	第一个0x20:
+	if (stat & DW_IC_INTR_RD_REQ) { /// master read slave，threshold为0，触发中断0x20
+		if (slave_activity) {
+			regmap_read(dev->map, DW_IC_CLR_RD_REQ, &tmp);
+
+			if (!(dev->status & STATUS_READ_IN_PROGRESS)) {
+				i2c_slave_event(dev->slave,
+						I2C_SLAVE_READ_REQUESTED,
+						&val);
+				dev->status |= STATUS_READ_IN_PROGRESS;
+				dev->status &= ~STATUS_WRITE_IN_PROGRESS;
+			}
+			regmap_write(dev->map, DW_IC_DATA_CMD, val);
+		}
+	}
+
+	第二个0x20:
+	if (slave_activity) {
+			regmap_read(dev->map, DW_IC_CLR_RD_REQ, &tmp);
+			else {
+				i2c_slave_event(dev->slave,
+						I2C_SLAVE_READ_PROCESSED,
+						&val);
+			}
+			regmap_write(dev->map, DW_IC_DATA_CMD, val);
+		}
+*/
+
 static int i2c_dw_irq_handler_slave(struct dw_i2c_dev *dev)
 {
 	u32 raw_stat, stat, enabled, tmp;
@@ -167,51 +282,53 @@ static int i2c_dw_irq_handler_slave(struct dw_i2c_dev *dev)
 	slave_activity = ((tmp & DW_IC_STATUS_SLAVE_ACTIVITY) >> 6);
 
 	if (!enabled || !(raw_stat & ~DW_IC_INTR_ACTIVITY) || !dev->slave)
-		return 0;
+		return IRQ_NONE;
 
 	stat = i2c_dw_read_clear_intrbits_slave(dev);
 	dev_dbg(dev->dev,
 		"%#x STATUS SLAVE_ACTIVITY=%#x : RAW_INTR_STAT=%#x : INTR_STAT=%#x\n",
 		enabled, slave_activity, raw_stat, stat);
 
-	if (stat & DW_IC_INTR_RX_FULL) {
-		if (dev->status != STATUS_WRITE_IN_PROGRESS) {
-			dev->status = STATUS_WRITE_IN_PROGRESS;
+	if (stat & DW_IC_INTR_RX_FULL) {  /// master write slave，threshold为0，触发中断0x20
+		if (!(dev->status & STATUS_WRITE_IN_PROGRESS)) {
+			dev->status |= STATUS_WRITE_IN_PROGRESS;
+			dev->status &= ~STATUS_READ_IN_PROGRESS;
 			i2c_slave_event(dev->slave, I2C_SLAVE_WRITE_REQUESTED,
 					&val);
 		}
 
-		regmap_read(dev->map, DW_IC_DATA_CMD, &tmp);
-		val = tmp;
-		if (!i2c_slave_event(dev->slave, I2C_SLAVE_WRITE_RECEIVED,
-				     &val))
-			dev_vdbg(dev->dev, "Byte %X acked!", val);
+		do {
+			regmap_read(dev->map, DW_IC_DATA_CMD, &tmp);
+			val = tmp;
+			i2c_slave_event(dev->slave, I2C_SLAVE_WRITE_RECEIVED,
+					&val);
+			regmap_read(dev->map, DW_IC_STATUS, &tmp);
+		} while (tmp & DW_IC_STATUS_RFNE); /// rx fifo不是空的就一直读完
 	}
 
-	if (stat & DW_IC_INTR_RD_REQ) {
+	if (stat & DW_IC_INTR_RD_REQ) { /// master read slave，threshold为0，触发中断0x20
 		if (slave_activity) {
 			regmap_read(dev->map, DW_IC_CLR_RD_REQ, &tmp);
 
-			dev->status = STATUS_READ_IN_PROGRESS;
-			if (!i2c_slave_event(dev->slave,
-					     I2C_SLAVE_READ_REQUESTED,
-					     &val))
-				regmap_write(dev->map, DW_IC_DATA_CMD, val);
+			if (!(dev->status & STATUS_READ_IN_PROGRESS)) {
+				i2c_slave_event(dev->slave,
+						I2C_SLAVE_READ_REQUESTED,
+						&val);
+				dev->status |= STATUS_READ_IN_PROGRESS;
+				dev->status &= ~STATUS_WRITE_IN_PROGRESS;
+			} else {
+				i2c_slave_event(dev->slave,
+						I2C_SLAVE_READ_PROCESSED,
+						&val);
+			}
+			regmap_write(dev->map, DW_IC_DATA_CMD, val);
 		}
 	}
 
-	if (stat & DW_IC_INTR_RX_DONE) {
-		if (!i2c_slave_event(dev->slave, I2C_SLAVE_READ_PROCESSED,
-				     &val))
-			regmap_read(dev->map, DW_IC_CLR_RX_DONE, &tmp);
-	}
-
-	if (stat & DW_IC_INTR_STOP_DET) {
-		dev->status = STATUS_IDLE;
+	if (stat & DW_IC_INTR_STOP_DET)
 		i2c_slave_event(dev->slave, I2C_SLAVE_STOP, &val);
-	}
 
-	return 1;
+	return IRQ_HANDLED;
 }
 
 static irqreturn_t i2c_dw_isr_slave(int this_irq, void *dev_id)

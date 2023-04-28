@@ -501,7 +501,7 @@ fw_platform_init:
 
 .macro	TRAP_SAVE_AND_SETUP_SP_T0
 	/* Swap TP and MSCRATCH */
-	csrrw	tp, CSR_MSCRATCH, tp
+	csrrw	tp, CSR_MSCRATCH, tp /// 交换tp和CSR_MSCRATCH
 
 	/* Save T0 in scratch space */
 	REG_S	t0, SBI_SCRATCH_TMP0_OFFSET(tp)
@@ -516,11 +516,11 @@ fw_platform_init:
 	 * Came_From_M_Mode = -1   ==>    Exception_Stack = SP
 	 */
 	csrr	t0, CSR_MSTATUS
-	srl	t0, t0, MSTATUS_MPP_SHIFT
-	and	t0, t0, PRV_M
-	slti	t0, t0, PRV_M
-	add	t0, t0, -1
-	xor	sp, sp, tp
+	srl	t0, t0, MSTATUS_MPP_SHIFT /// 获取CSR_MSTATUS的bit11 MSTATUS_MPP，中断发生前的特权级别
+	and	t0, t0, PRV_M /// 如果M模式发生的中断t0=3，S模式发生的中断t0=1
+	slti	t0, t0, PRV_M /// 如果t0(MSTATUS_MPP) < PRV_M 则t0=1
+	add	t0, t0, -1 /// t0=0 t0=-1
+	xor	sp, sp, tp ///
 	and	t0, t0, sp
 	xor	sp, sp, tp
 	xor	t0, tp, t0
@@ -543,11 +543,11 @@ fw_platform_init:
 
 .macro	TRAP_SAVE_MEPC_MSTATUS have_mstatush
 	/* Save MEPC and MSTATUS CSRs */
-	csrr	t0, CSR_MEPC
-	REG_S	t0, SBI_TRAP_REGS_OFFSET(mepc)(sp)
+	csrr	t0, CSR_MEPC /// t0=CSR_MEPC
+	REG_S	t0, SBI_TRAP_REGS_OFFSET(mepc)(sp) /// 存MEPC的值
 	csrr	t0, CSR_MSTATUS
-	REG_S	t0, SBI_TRAP_REGS_OFFSET(mstatus)(sp)
-	.if \have_mstatush
+	REG_S	t0, SBI_TRAP_REGS_OFFSET(mstatus)(sp) /// 存CSR_MSTATUS的值
+	.if \have_mstatush /// hypervisor 跳过
 	csrr	t0, CSR_MSTATUSH
 	REG_S	t0, SBI_TRAP_REGS_OFFSET(mstatusH)(sp)
 	.else

@@ -223,13 +223,15 @@ void sbi_trap_handler(struct sbi_trap_regs *regs)
 		mtinst = csr_read(CSR_MTINST);
 	}
 
-	if (mcause & (1UL << (__riscv_xlen - 1))) { /// 1<<31 如果mcause的bit31为1代表异常
+	if (mcause & (1UL << (__riscv_xlen - 1))) { /// 1<<31 如果mcause的bit31为1代表中断
 		mcause &= ~(1UL << (__riscv_xlen - 1));
 		switch (mcause) {
 		case IRQ_M_TIMER:
+			/// csr_clear(CSR_MIE, MIP_MTIP); csr_set(CSR_MIP, MIP_STIP);
+			/// 禁止M mode 时钟中断，设置MIP将要来的中断为S mode interrupt，将时钟中断处理下放给低级权限。
 			sbi_timer_process();
 			break;
-		case IRQ_M_SOFT:
+		case IRQ_M_SOFT: /// software interrupt
 			sbi_ipi_process();
 			break;
 		default:
