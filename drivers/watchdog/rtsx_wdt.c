@@ -156,7 +156,7 @@ static void rtsx_wdt_stop(void)
 
 	spin_lock_irqsave(&rtsx_wdt_device.io_lock, flag);
 
-	rts_set_field(wdt_reg + WATCHDOG_CFG_REG, 0, 1, WDOG_EN); /// watchdog disenable
+	rts_set_field(wdt_reg + WATCHDOG_CFG_REG, 0, 1, WDOG_EN); /// watchdog disable
 
 	spin_unlock_irqrestore(&rtsx_wdt_device.io_lock, flag);
 	pr_info("Stopped watchdog timer\n");
