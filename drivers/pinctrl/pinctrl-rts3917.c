@@ -1907,7 +1907,7 @@ static irqreturn_t rts_irq_handler(int irq, void *pc)
 		val1 = readl(rtspc->addr + (int)&(regs->gpio_int_en));
 		val2 = readl(rtspc->addr + (int)&(regs->gpio_int));
 
-		bs = sc->pinh - sc->pinl + 1;
+		bs = sc->pinh - sc->pinl + 1; /// 下面都以pincfgaddr[0]为例, bs = 15 - 0 + 1 = 16
 		if (bs > 8)
 			bs = 16;
 		else if (bs > 4)
@@ -1915,25 +1915,25 @@ static irqreturn_t rts_irq_handler(int irq, void *pc)
 		else
 			bs = 4;
 
-		mask = GENMASK(sc->pinh - sc->pinl, 0);
-		mask = (mask << bs) | mask;
+		mask = GENMASK(sc->pinh - sc->pinl, 0); /// mask = 0xffff
+		mask = (mask << bs) | mask; /// mask = 0xffffffff 参考spec，bit0~15是fall interrupt. 16~31是rise interrupt
 
 		val1 &= mask;
 		val2 &= mask;
 
-		writel(val2, rtspc->addr + (int)&(regs->gpio_int));
+		writel(val2, rtspc->addr + (int)&(regs->gpio_int)); /// 清中断
 
 		val2 &= val1;
 
 		for_each_set_bit(offset, (const unsigned long *)&val2, 32) {
 			irqno = offset;
 			if (irqno >= bs)
-				irqno -= bs;
-			irqno += sc->pinl;
-			irqno = irq_linear_revmap(rtspc->irq_domain, irqno);
+				irqno -= bs; /// 这里是因为比如，bit16也是gpio0的rise中断，减去16，irqno/hw id = 0
+			irqno += sc->pinl; /// 这里得到gpio号
+			irqno = irq_linear_revmap(rtspc->irq_domain, irqno); /// 根据hw id返回irq number
 			if (irqno) {
 				handled = 1;
-				generic_handle_irq(irqno);
+				generic_handle_irq(irqno); /// 进入desc->handler --> handle_simple_irq --> action->handler再根据gpio irq domain不同的中断号，可以requeset进入不同的interrupt handler. 见文件尾部。
 			}
 		}
 	}
@@ -2022,7 +2022,7 @@ static int rts_pinctrl_probe(struct platform_device *pdev)
 	}
     /// 把gpio controller抽象成一个虚拟的interruput controller，hw interrupt id就是gpio_numbers。
     /// 相当于两个interrupt controller级联，上层共用一个中断号rtspc->irq，下面还有gpio_numbers个虚拟出来的中断号。
-	rtspc->irq_domain = irq_domain_add_linear(NULL, gpio_numbers, /// 建立irq number和hw interrupt id映射
+	rtspc->irq_domain = irq_domain_add_linear(NULL, gpio_numbers, /// 注册irq_domain
 						  &irq_domain_simple_ops, NULL);
 	if (!rtspc->irq_domain) {
 		dev_err(dev, "could not create IRQ domain\n");
@@ -2031,13 +2031,13 @@ static int rts_pinctrl_probe(struct platform_device *pdev)
 	}
 
 	for (i = 0; i < gpio_numbers; i++) {
-		int gpioirq = irq_create_mapping(rtspc->irq_domain, i);
+		int gpioirq = irq_create_mapping(rtspc->irq_domain, i); /// 建立irq number和hw id的映射，创建对应的irq_desc
 
-		irq_set_lockdep_class(gpioirq, &gpio_lock_class,
+		irq_set_lockdep_class(gpioirq, &gpio_lock_class, /// debug用途? 6.3 kernel 需要打开CONFIG_LOCKDEP 才生效
 				      &gpio_request_class);
 		irq_set_chip_and_handler(gpioirq, &rts_gpio_irq_chip,
 					 handle_simple_irq);
-		irq_set_chip_data(gpioirq, rtspc);
+		irq_set_chip_data(gpioirq, rtspc); /// 设置desc->irq_data.chip_data = rtspc;
 	}
 
 	err = request_irq(rtspc->irq, rts_irq_handler,
@@ -2161,3 +2161,31 @@ static void __exit rts_pinctrl_exit(void)
 }
 
 module_exit(rts_pinctrl_exit);
+
+
+/// gpio 中断测试
+// #include <linux/gpio.h>
+
+
+// static irqreturn_t interrupt_func(int irq, void *dev_id)
+// {
+// 	printk(KERN_INFO "%d:%s %d\n", __LINE__, __func__, irq);
+
+// 	return IRQ_HANDLED;    /* not ours */
+
+// }
+
+
+// int i;
+
+// for (i = 0; i < 89; i++) {
+
+// gpio_request(i, "button");
+
+// gpio_direction_input(i);
+
+// printk(KERN_INFO "%d:%s %d %d\n", __LINE__, __func__, i, gpio_to_irq(i));
+
+// request_irq(gpio_to_irq(i), interrupt_func, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, NULL, NULL);
+
+// }

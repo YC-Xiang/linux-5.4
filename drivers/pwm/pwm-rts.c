@@ -259,7 +259,7 @@ static inline void pwm_writel(struct rtsx_pwm_chip *chip, unsigned int num,
 #define NS_IN_HZ (1000000000UL)
 
 static int rtsx_pwm_config(struct pwm_chip *chip, struct pwm_device *pwm,
-			   int duty_ns, int period_ns)
+			   int duty_ns, int period_ns) /// duty_ns 是高电平持续时间，period_ns是高电平+低电平时间
 {
 	struct rtsx_pwm_chip *pc = to_rtsx_pwm_chip(chip);
 	unsigned long offset;
@@ -268,7 +268,7 @@ static int rtsx_pwm_config(struct pwm_chip *chip, struct pwm_device *pwm,
 
 	offset = pwm->hwpwm;
 
-	tin_ns = NS_IN_HZ / pc->busclk;
+	tin_ns = NS_IN_HZ / pc->busclk; ///高电平+低电平总时间为多少ns
 
 	high = duty_ns / tin_ns;
 	total = period_ns / tin_ns;
@@ -335,7 +335,7 @@ static int rtsx_pwm_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "failed to get xb2 clock\n");
 		return PTR_ERR(clk);
 	}
-	pwm->busclk = clk_get_rate(clk);
+	pwm->busclk = clk_get_rate(clk); /// 获取xb2_ck的速率
 	clk_put(clk);
 
 	pwm->chip.dev = &pdev->dev;

@@ -597,10 +597,10 @@
 				};
 			};
 
-			sdhc0_pullup_mode: sdhc0_pullup {
+			sdhc0_pullup_mode: sdhc0_pullup { // 会依次设置default_mux, pullup_cfg0, pullup_cfg1, pullup_cfg2
 				default_mux {
 					function = "sdio0func";
-					groups = "sdio0grp", "sdio0cdgrp",
+					groups = "sdio0grp", "sdio0cdgrp", /// 应该所有的groups都会被设置为上面的function
 						"sdio0wpgrp";
 				};
 				pullup_cfg0 {
