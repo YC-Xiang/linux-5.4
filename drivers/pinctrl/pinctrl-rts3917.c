@@ -1287,7 +1287,7 @@ static struct gpio_chip rts_gpio_chip = {
 	.to_irq = rts_gpio_to_irq,
 	.base = 0,
 	.ngpio = RTS_MAX_NGPIO,
-	.can_sleep = 0,
+	.can_sleep = 0, // chained gpio chips赋值0, NESTED THREADED GPIO IRQCHIPS 赋值1.
 };
 
 static int rts_rtspctl_get_groups_count(struct pinctrl_dev *rtspctldev)
@@ -1591,19 +1591,19 @@ static int rts_gpio_config_set(struct rts_pinctrl *rtspc, unsigned int pin,
 	bf = pin - sc->pinl;
 
 	switch (config) {
-	case RTS_PINCONFIG_PULL_NONE:
+	case RTS_PINCONFIG_PULL_NONE: /// bias-disable;
 		rts_gpio_set_field(rtspc->addr + (int)&(regs->pullctrl),
 				   0, 2, bf << 1);
 		break;
-	case RTS_PINCONFIG_PULL_DOWN:
+	case RTS_PINCONFIG_PULL_DOWN: /// bias-pull-down;
 		rts_gpio_set_field(rtspc->addr + (int)&(regs->pullctrl),
 				   1, 2, bf << 1);
 		break;
-	case RTS_PINCONFIG_PULL_UP:
+	case RTS_PINCONFIG_PULL_UP: /// bias-pull-up;
 		rts_gpio_set_field(rtspc->addr + (int)&(regs->pullctrl),
 				   2, 2, bf << 1);
 		break;
-	case RTS_PIN_CONFIG_DRIVE_STRENGTH:
+	case RTS_PIN_CONFIG_DRIVE_STRENGTH: /// drive-strength = <4>; drive-strength = <8>;
 		rts_gpio_set_field(rtspc->addr + (int)&(regs->drv_sel),
 				   (value >> 2) - 1, 1, bf);
 		break;
@@ -1899,7 +1899,7 @@ static irqreturn_t rts_irq_handler(int irq, void *pc)
 	struct sharepin_cfg_addr *sc;
 	int handled = 0;
 
-	for (i = 0; i < ARRAY_SIZE(pincfgaddr); i++) {
+	for (i = 0; i < ARRAY_SIZE(pincfgaddr); i++) { /// 遍历所有的pad，看有无中断。
 		sc = &pincfgaddr[i];
 		sc = rts_get_pinaddr(sc->pinl);
 		regs = (struct pinregs *)sc->pinaddr;
@@ -1928,7 +1928,7 @@ static irqreturn_t rts_irq_handler(int irq, void *pc)
 		for_each_set_bit(offset, (const unsigned long *)&val2, 32) {
 			irqno = offset;
 			if (irqno >= bs)
-				irqno -= bs; /// 这里是因为比如，bit16也是gpio0的rise中断，减去16，irqno/hw id = 0
+				irqno -= bs; /// 这里是因为比如，bit16是gpio0的rise中断，需要减去16，irqno/hw id = 0
 			irqno += sc->pinl; /// 这里得到gpio号
 			irqno = irq_linear_revmap(rtspc->irq_domain, irqno); /// 根据hw id返回irq number
 			if (irqno) {

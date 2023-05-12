@@ -227,7 +227,7 @@ static void plic_handle_irq(struct irq_desc *desc)
 
 	WARN_ON_ONCE(!handler->present);
 
-	chained_irq_enter(chip, desc);
+	chained_irq_enter(chip, desc); /// 级联的第二级中断处理函数需要
 
 	while ((hwirq = readl(claim))) {
 		int irq = irq_find_mapping(handler->priv->irqdomain, hwirq);
