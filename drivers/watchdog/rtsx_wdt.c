@@ -140,9 +140,9 @@ static void rtsx_wdt_start(void)
 	spin_lock_irqsave(&rtsx_wdt_device.io_lock, flag);
 
 #ifdef CONFIG_EXTERNAL_RESET
-	rts_set_field(wdt_reg + WATCHDOG_CFG_REG, 1, 1, WDOG_RST_PMU_ENABLE);
+	rts_set_field(wdt_reg + WATCHDOG_CFG_REG, 1, 1, WDOG_RST_PMU_ENABLE); /// pmu reset enable
 #else
-	rts_set_field(wdt_reg + WATCHDOG_CFG_REG, 1, 1, WDOG_RST_EN); // reset system when watchdog timeout
+	rts_set_field(wdt_reg + WATCHDOG_CFG_REG, 1, 1, WDOG_RST_EN); /// reset system when watchdog timeout
 #endif
 	rts_set_field(wdt_reg + WATCHDOG_CFG_REG, 1, 1, WDOG_EN); /// watchdog enable
 

@@ -97,7 +97,7 @@ void dw8250_setup_port(struct uart_port *p)
 	reg = dw8250_readl_ext(p, DW_UART_DLF);
 	dw8250_writel_ext(p, DW_UART_DLF, 0);
 
-	if (reg) {
+	if (reg) { /// reg应该是0
 		struct dw8250_port_data *d = p->private_data;
 
 		d->dlf_size = fls(reg);
@@ -105,7 +105,7 @@ void dw8250_setup_port(struct uart_port *p)
 		p->set_divisor = dw8250_set_divisor;
 	}
 
-	reg = dw8250_readl_ext(p, DW_UART_CPR);
+	reg = dw8250_readl_ext(p, DW_UART_CPR); /// reg应该是0
 	if (!reg)
 		return;
 

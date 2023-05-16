@@ -350,7 +350,7 @@ static void dw8250_quirks(struct uart_port *p, struct dw8250_data *data)
 		id = of_alias_get_id(np, "serial");
 		if (id >= 0)
 			p->line = id;
-#ifdef CONFIG_64BIT
+#ifdef CONFIG_64BIT  /// skip
 		if (of_device_is_compatible(np, "cavium,octeon-3860-uart")) {
 			p->serial_in = dw8250_serial_inq;
 			p->serial_out = dw8250_serial_outq;
@@ -360,17 +360,17 @@ static void dw8250_quirks(struct uart_port *p, struct dw8250_data *data)
 			data->skip_autocfg = true;
 		}
 #endif
-		if (of_device_is_big_endian(p->dev->of_node)) {
+		if (of_device_is_big_endian(p->dev->of_node)) { /// skip
 			p->iotype = UPIO_MEM32BE;
 			p->serial_in = dw8250_serial_in32be;
 			p->serial_out = dw8250_serial_out32be;
 		}
-		if (of_device_is_compatible(np, "marvell,armada-38x-uart"))
+		if (of_device_is_compatible(np, "marvell,armada-38x-uart")) /// skip
 			p->serial_out = dw8250_serial_out38x;
-		if (of_device_is_compatible(np, "realtek,rts-uart"))
+		if (of_device_is_compatible(np, "realtek,rts-uart")) /// this way
 			p->set_termios = NULL;
 
-	} else if (acpi_dev_present("APMC0D08", NULL, -1)) {
+	} else if (acpi_dev_present("APMC0D08", NULL, -1)) { /// skip
 		p->iotype = UPIO_MEM32;
 		p->regshift = 2;
 		p->serial_in = dw8250_serial_in32;
@@ -379,7 +379,7 @@ static void dw8250_quirks(struct uart_port *p, struct dw8250_data *data)
 
 	/* Platforms with iDMA 64-bit */
 	if (platform_get_resource_byname(to_platform_device(p->dev),
-					 IORESOURCE_MEM, "lpss_priv")) {
+					 IORESOURCE_MEM, "lpss_priv")) { /// skip
 		data->data.dma.rx_param = p->dev->parent;
 		data->data.dma.tx_param = p->dev->parent;
 		data->data.dma.fn = dw8250_idma_filter;
@@ -396,7 +396,7 @@ static void dw8250_probe_plat(struct uart_port *p,
 	p->flags = pdata->flags;
 	p->uartclk = pdata->uartclk;
 	p->iotype = pdata->iotype;
-	if (p->iotype == UPIO_MEM32) {
+	if (p->iotype == UPIO_MEM32) { /// p->iotype = UPIO_MEM; skip
 		p->serial_in = dw8250_serial_in32;
 		p->serial_out = dw8250_serial_out32;
 	}
@@ -437,7 +437,7 @@ static int dw8250_probe(struct platform_device *pdev)
 	p->serial_in	= dw8250_serial_in;
 	p->serial_out	= dw8250_serial_out;
 	p->set_ldisc	= dw8250_set_ldisc;
-	p->set_termios	= dw8250_set_termios;
+	p->set_termios	= dw8250_set_termios; /// 在dw8250_quirks中又p->set_termios=NULL
 
 	p->membase = devm_ioremap(dev, regs->start, resource_size(regs));
 	if (!p->membase)
@@ -559,11 +559,11 @@ static int dw8250_probe(struct platform_device *pdev)
 	if (data->uart_16550_compatible)
 		p->handle_irq = NULL;
 
-	if (!data->skip_autocfg)
+	if (!data->skip_autocfg) /// don't skip
 		dw8250_setup_port(p);
 
 	/* If we have a valid fifosize, try hooking up DMA */
-	if (p->fifosize) {
+	if (p->fifosize) { /// skip
 		data->data.dma.rxconf.src_maxburst = p->fifosize / 4;
 		data->data.dma.txconf.dst_maxburst = p->fifosize / 4;
 		up->dma = &data->data.dma;
