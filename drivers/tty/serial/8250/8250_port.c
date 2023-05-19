@@ -84,229 +84,229 @@ static const struct serial8250_config uart_config[] = {
 		.rxtrig_bytes	= {1, 4, 8, 14},
 		.flags		= UART_CAP_FIFO,
 	},
-	[PORT_CIRRUS] = {
-		.name		= "Cirrus",
-		.fifo_size	= 1,
-		.tx_loadsz	= 1,
-	},
-	[PORT_16650] = {
-		.name		= "ST16650",
-		.fifo_size	= 1,
-		.tx_loadsz	= 1,
-		.flags		= UART_CAP_FIFO | UART_CAP_EFR | UART_CAP_SLEEP,
-	},
-	[PORT_16650V2] = {
-		.name		= "ST16650V2",
-		.fifo_size	= 32,
-		.tx_loadsz	= 16,
-		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_01 |
-				  UART_FCR_T_TRIG_00,
-		.rxtrig_bytes	= {8, 16, 24, 28},
-		.flags		= UART_CAP_FIFO | UART_CAP_EFR | UART_CAP_SLEEP,
-	},
-	[PORT_16750] = {
-		.name		= "TI16750",
-		.fifo_size	= 64,
-		.tx_loadsz	= 64,
-		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10 |
-				  UART_FCR7_64BYTE,
-		.rxtrig_bytes	= {1, 16, 32, 56},
-		.flags		= UART_CAP_FIFO | UART_CAP_SLEEP | UART_CAP_AFE,
-	},
-	[PORT_STARTECH] = {
-		.name		= "Startech",
-		.fifo_size	= 1,
-		.tx_loadsz	= 1,
-	},
-	[PORT_16C950] = {
-		.name		= "16C950/954",
-		.fifo_size	= 128,
-		.tx_loadsz	= 128,
-		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_01,
-		.rxtrig_bytes	= {16, 32, 112, 120},
-		/* UART_CAP_EFR breaks billionon CF bluetooth card. */
-		.flags		= UART_CAP_FIFO | UART_CAP_SLEEP,
-	},
-	[PORT_16654] = {
-		.name		= "ST16654",
-		.fifo_size	= 64,
-		.tx_loadsz	= 32,
-		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_01 |
-				  UART_FCR_T_TRIG_10,
-		.rxtrig_bytes	= {8, 16, 56, 60},
-		.flags		= UART_CAP_FIFO | UART_CAP_EFR | UART_CAP_SLEEP,
-	},
-	[PORT_16850] = {
-		.name		= "XR16850",
-		.fifo_size	= 128,
-		.tx_loadsz	= 128,
-		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10,
-		.flags		= UART_CAP_FIFO | UART_CAP_EFR | UART_CAP_SLEEP,
-	},
-	[PORT_RSA] = {
-		.name		= "RSA",
-		.fifo_size	= 2048,
-		.tx_loadsz	= 2048,
-		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_11,
-		.flags		= UART_CAP_FIFO,
-	},
-	[PORT_NS16550A] = {
-		.name		= "NS16550A",
-		.fifo_size	= 16,
-		.tx_loadsz	= 16,
-		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10,
-		.flags		= UART_CAP_FIFO | UART_NATSEMI,
-	},
-	[PORT_XSCALE] = {
-		.name		= "XScale",
-		.fifo_size	= 32,
-		.tx_loadsz	= 32,
-		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10,
-		.flags		= UART_CAP_FIFO | UART_CAP_UUE | UART_CAP_RTOIE,
-	},
-	[PORT_OCTEON] = {
-		.name		= "OCTEON",
-		.fifo_size	= 64,
-		.tx_loadsz	= 64,
-		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10,
-		.flags		= UART_CAP_FIFO,
-	},
-	[PORT_AR7] = {
-		.name		= "AR7",
-		.fifo_size	= 16,
-		.tx_loadsz	= 16,
-		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_00,
-		.flags		= UART_CAP_FIFO /* | UART_CAP_AFE */,
-	},
-	[PORT_U6_16550A] = {
-		.name		= "U6_16550A",
-		.fifo_size	= 64,
-		.tx_loadsz	= 64,
-		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10,
-		.flags		= UART_CAP_FIFO | UART_CAP_AFE,
-	},
-	[PORT_TEGRA] = {
-		.name		= "Tegra",
-		.fifo_size	= 32,
-		.tx_loadsz	= 8,
-		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_01 |
-				  UART_FCR_T_TRIG_01,
-		.rxtrig_bytes	= {1, 4, 8, 14},
-		.flags		= UART_CAP_FIFO | UART_CAP_RTOIE,
-	},
-	[PORT_XR17D15X] = {
-		.name		= "XR17D15X",
-		.fifo_size	= 64,
-		.tx_loadsz	= 64,
-		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10,
-		.flags		= UART_CAP_FIFO | UART_CAP_AFE | UART_CAP_EFR |
-				  UART_CAP_SLEEP,
-	},
-	[PORT_XR17V35X] = {
-		.name		= "XR17V35X",
-		.fifo_size	= 256,
-		.tx_loadsz	= 256,
-		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_11 |
-				  UART_FCR_T_TRIG_11,
-		.flags		= UART_CAP_FIFO | UART_CAP_AFE | UART_CAP_EFR |
-				  UART_CAP_SLEEP,
-	},
-	[PORT_LPC3220] = {
-		.name		= "LPC3220",
-		.fifo_size	= 64,
-		.tx_loadsz	= 32,
-		.fcr		= UART_FCR_DMA_SELECT | UART_FCR_ENABLE_FIFO |
-				  UART_FCR_R_TRIG_00 | UART_FCR_T_TRIG_00,
-		.flags		= UART_CAP_FIFO,
-	},
-	[PORT_BRCM_TRUMANAGE] = {
-		.name		= "TruManage",
-		.fifo_size	= 1,
-		.tx_loadsz	= 1024,
-		.flags		= UART_CAP_HFIFO,
-	},
-	[PORT_8250_CIR] = {
-		.name		= "CIR port"
-	},
-	[PORT_ALTR_16550_F32] = {
-		.name		= "Altera 16550 FIFO32",
-		.fifo_size	= 32,
-		.tx_loadsz	= 32,
-		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10,
-		.rxtrig_bytes	= {1, 8, 16, 30},
-		.flags		= UART_CAP_FIFO | UART_CAP_AFE,
-	},
-	[PORT_ALTR_16550_F64] = {
-		.name		= "Altera 16550 FIFO64",
-		.fifo_size	= 64,
-		.tx_loadsz	= 64,
-		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10,
-		.rxtrig_bytes	= {1, 16, 32, 62},
-		.flags		= UART_CAP_FIFO | UART_CAP_AFE,
-	},
-	[PORT_ALTR_16550_F128] = {
-		.name		= "Altera 16550 FIFO128",
-		.fifo_size	= 128,
-		.tx_loadsz	= 128,
-		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10,
-		.rxtrig_bytes	= {1, 32, 64, 126},
-		.flags		= UART_CAP_FIFO | UART_CAP_AFE,
-	},
-	/*
-	 * tx_loadsz is set to 63-bytes instead of 64-bytes to implement
-	 * workaround of errata A-008006 which states that tx_loadsz should
-	 * be configured less than Maximum supported fifo bytes.
-	 */
-	[PORT_16550A_FSL64] = {
-		.name		= "16550A_FSL64",
-		.fifo_size	= 64,
-		.tx_loadsz	= 63,
-		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10 |
-				  UART_FCR7_64BYTE,
-		.flags		= UART_CAP_FIFO,
-	},
-	[PORT_RT2880] = {
-		.name		= "Palmchip BK-3103",
-		.fifo_size	= 16,
-		.tx_loadsz	= 16,
-		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10,
-		.rxtrig_bytes	= {1, 4, 8, 14},
-		.flags		= UART_CAP_FIFO,
-	},
-	[PORT_DA830] = {
-		.name		= "TI DA8xx/66AK2x",
-		.fifo_size	= 16,
-		.tx_loadsz	= 16,
-		.fcr		= UART_FCR_DMA_SELECT | UART_FCR_ENABLE_FIFO |
-				  UART_FCR_R_TRIG_10,
-		.rxtrig_bytes	= {1, 4, 8, 14},
-		.flags		= UART_CAP_FIFO | UART_CAP_AFE,
-	},
-	[PORT_MTK_BTIF] = {
-		.name		= "MediaTek BTIF",
-		.fifo_size	= 16,
-		.tx_loadsz	= 16,
-		.fcr		= UART_FCR_ENABLE_FIFO |
-				  UART_FCR_CLEAR_RCVR | UART_FCR_CLEAR_XMIT,
-		.flags		= UART_CAP_FIFO,
-	},
-	[PORT_NPCM] = {
-		.name		= "Nuvoton 16550",
-		.fifo_size	= 16,
-		.tx_loadsz	= 16,
-		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10 |
-				  UART_FCR_CLEAR_RCVR | UART_FCR_CLEAR_XMIT,
-		.rxtrig_bytes	= {1, 4, 8, 14},
-		.flags		= UART_CAP_FIFO,
-	},
-	[PORT_SUNIX] = {
-		.name		= "Sunix",
-		.fifo_size	= 128,
-		.tx_loadsz	= 128,
-		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10,
-		.rxtrig_bytes	= {1, 32, 64, 112},
-		.flags		= UART_CAP_FIFO | UART_CAP_SLEEP,
-	},
+	// [PORT_CIRRUS] = {
+	// 	.name		= "Cirrus",
+	// 	.fifo_size	= 1,
+	// 	.tx_loadsz	= 1,
+	// },
+	// [PORT_16650] = {
+	// 	.name		= "ST16650",
+	// 	.fifo_size	= 1,
+	// 	.tx_loadsz	= 1,
+	// 	.flags		= UART_CAP_FIFO | UART_CAP_EFR | UART_CAP_SLEEP,
+	// },
+	// [PORT_16650V2] = {
+	// 	.name		= "ST16650V2",
+	// 	.fifo_size	= 32,
+	// 	.tx_loadsz	= 16,
+	// 	.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_01 |
+	// 			  UART_FCR_T_TRIG_00,
+	// 	.rxtrig_bytes	= {8, 16, 24, 28},
+	// 	.flags		= UART_CAP_FIFO | UART_CAP_EFR | UART_CAP_SLEEP,
+	// },
+	// [PORT_16750] = {
+	// 	.name		= "TI16750",
+	// 	.fifo_size	= 64,
+	// 	.tx_loadsz	= 64,
+	// 	.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10 |
+	// 			  UART_FCR7_64BYTE,
+	// 	.rxtrig_bytes	= {1, 16, 32, 56},
+	// 	.flags		= UART_CAP_FIFO | UART_CAP_SLEEP | UART_CAP_AFE,
+	// },
+	// [PORT_STARTECH] = {
+	// 	.name		= "Startech",
+	// 	.fifo_size	= 1,
+	// 	.tx_loadsz	= 1,
+	// },
+	// [PORT_16C950] = {
+	// 	.name		= "16C950/954",
+	// 	.fifo_size	= 128,
+	// 	.tx_loadsz	= 128,
+	// 	.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_01,
+	// 	.rxtrig_bytes	= {16, 32, 112, 120},
+	// 	/* UART_CAP_EFR breaks billionon CF bluetooth card. */
+	// 	.flags		= UART_CAP_FIFO | UART_CAP_SLEEP,
+	// },
+	// [PORT_16654] = {
+	// 	.name		= "ST16654",
+	// 	.fifo_size	= 64,
+	// 	.tx_loadsz	= 32,
+	// 	.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_01 |
+	// 			  UART_FCR_T_TRIG_10,
+	// 	.rxtrig_bytes	= {8, 16, 56, 60},
+	// 	.flags		= UART_CAP_FIFO | UART_CAP_EFR | UART_CAP_SLEEP,
+	// },
+	// [PORT_16850] = {
+	// 	.name		= "XR16850",
+	// 	.fifo_size	= 128,
+	// 	.tx_loadsz	= 128,
+	// 	.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10,
+	// 	.flags		= UART_CAP_FIFO | UART_CAP_EFR | UART_CAP_SLEEP,
+	// },
+	// [PORT_RSA] = {
+	// 	.name		= "RSA",
+	// 	.fifo_size	= 2048,
+	// 	.tx_loadsz	= 2048,
+	// 	.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_11,
+	// 	.flags		= UART_CAP_FIFO,
+	// },
+	// [PORT_NS16550A] = {
+	// 	.name		= "NS16550A",
+	// 	.fifo_size	= 16,
+	// 	.tx_loadsz	= 16,
+	// 	.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10,
+	// 	.flags		= UART_CAP_FIFO | UART_NATSEMI,
+	// },
+	// [PORT_XSCALE] = {
+	// 	.name		= "XScale",
+	// 	.fifo_size	= 32,
+	// 	.tx_loadsz	= 32,
+	// 	.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10,
+	// 	.flags		= UART_CAP_FIFO | UART_CAP_UUE | UART_CAP_RTOIE,
+	// },
+	// [PORT_OCTEON] = {
+	// 	.name		= "OCTEON",
+	// 	.fifo_size	= 64,
+	// 	.tx_loadsz	= 64,
+	// 	.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10,
+	// 	.flags		= UART_CAP_FIFO,
+	// },
+	// [PORT_AR7] = {
+	// 	.name		= "AR7",
+	// 	.fifo_size	= 16,
+	// 	.tx_loadsz	= 16,
+	// 	.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_00,
+	// 	.flags		= UART_CAP_FIFO /* | UART_CAP_AFE */,
+	// },
+	// [PORT_U6_16550A] = {
+	// 	.name		= "U6_16550A",
+	// 	.fifo_size	= 64,
+	// 	.tx_loadsz	= 64,
+	// 	.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10,
+	// 	.flags		= UART_CAP_FIFO | UART_CAP_AFE,
+	// },
+	// [PORT_TEGRA] = {
+	// 	.name		= "Tegra",
+	// 	.fifo_size	= 32,
+	// 	.tx_loadsz	= 8,
+	// 	.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_01 |
+	// 			  UART_FCR_T_TRIG_01,
+	// 	.rxtrig_bytes	= {1, 4, 8, 14},
+	// 	.flags		= UART_CAP_FIFO | UART_CAP_RTOIE,
+	// },
+	// [PORT_XR17D15X] = {
+	// 	.name		= "XR17D15X",
+	// 	.fifo_size	= 64,
+	// 	.tx_loadsz	= 64,
+	// 	.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10,
+	// 	.flags		= UART_CAP_FIFO | UART_CAP_AFE | UART_CAP_EFR |
+	// 			  UART_CAP_SLEEP,
+	// },
+	// [PORT_XR17V35X] = {
+	// 	.name		= "XR17V35X",
+	// 	.fifo_size	= 256,
+	// 	.tx_loadsz	= 256,
+	// 	.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_11 |
+	// 			  UART_FCR_T_TRIG_11,
+	// 	.flags		= UART_CAP_FIFO | UART_CAP_AFE | UART_CAP_EFR |
+	// 			  UART_CAP_SLEEP,
+	// },
+	// [PORT_LPC3220] = {
+	// 	.name		= "LPC3220",
+	// 	.fifo_size	= 64,
+	// 	.tx_loadsz	= 32,
+	// 	.fcr		= UART_FCR_DMA_SELECT | UART_FCR_ENABLE_FIFO |
+	// 			  UART_FCR_R_TRIG_00 | UART_FCR_T_TRIG_00,
+	// 	.flags		= UART_CAP_FIFO,
+	// },
+	// [PORT_BRCM_TRUMANAGE] = {
+	// 	.name		= "TruManage",
+	// 	.fifo_size	= 1,
+	// 	.tx_loadsz	= 1024,
+	// 	.flags		= UART_CAP_HFIFO,
+	// },
+	// [PORT_8250_CIR] = {
+	// 	.name		= "CIR port"
+	// },
+	// [PORT_ALTR_16550_F32] = {
+	// 	.name		= "Altera 16550 FIFO32",
+	// 	.fifo_size	= 32,
+	// 	.tx_loadsz	= 32,
+	// 	.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10,
+	// 	.rxtrig_bytes	= {1, 8, 16, 30},
+	// 	.flags		= UART_CAP_FIFO | UART_CAP_AFE,
+	// },
+	// [PORT_ALTR_16550_F64] = {
+	// 	.name		= "Altera 16550 FIFO64",
+	// 	.fifo_size	= 64,
+	// 	.tx_loadsz	= 64,
+	// 	.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10,
+	// 	.rxtrig_bytes	= {1, 16, 32, 62},
+	// 	.flags		= UART_CAP_FIFO | UART_CAP_AFE,
+	// },
+	// [PORT_ALTR_16550_F128] = {
+	// 	.name		= "Altera 16550 FIFO128",
+	// 	.fifo_size	= 128,
+	// 	.tx_loadsz	= 128,
+	// 	.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10,
+	// 	.rxtrig_bytes	= {1, 32, 64, 126},
+	// 	.flags		= UART_CAP_FIFO | UART_CAP_AFE,
+	// },
+	// /*
+	//  * tx_loadsz is set to 63-bytes instead of 64-bytes to implement
+	//  * workaround of errata A-008006 which states that tx_loadsz should
+	//  * be configured less than Maximum supported fifo bytes.
+	//  */
+	// [PORT_16550A_FSL64] = {
+	// 	.name		= "16550A_FSL64",
+	// 	.fifo_size	= 64,
+	// 	.tx_loadsz	= 63,
+	// 	.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10 |
+	// 			  UART_FCR7_64BYTE,
+	// 	.flags		= UART_CAP_FIFO,
+	// },
+	// [PORT_RT2880] = {
+	// 	.name		= "Palmchip BK-3103",
+	// 	.fifo_size	= 16,
+	// 	.tx_loadsz	= 16,
+	// 	.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10,
+	// 	.rxtrig_bytes	= {1, 4, 8, 14},
+	// 	.flags		= UART_CAP_FIFO,
+	// },
+	// [PORT_DA830] = {
+	// 	.name		= "TI DA8xx/66AK2x",
+	// 	.fifo_size	= 16,
+	// 	.tx_loadsz	= 16,
+	// 	.fcr		= UART_FCR_DMA_SELECT | UART_FCR_ENABLE_FIFO |
+	// 			  UART_FCR_R_TRIG_10,
+	// 	.rxtrig_bytes	= {1, 4, 8, 14},
+	// 	.flags		= UART_CAP_FIFO | UART_CAP_AFE,
+	// },
+	// [PORT_MTK_BTIF] = {
+	// 	.name		= "MediaTek BTIF",
+	// 	.fifo_size	= 16,
+	// 	.tx_loadsz	= 16,
+	// 	.fcr		= UART_FCR_ENABLE_FIFO |
+	// 			  UART_FCR_CLEAR_RCVR | UART_FCR_CLEAR_XMIT,
+	// 	.flags		= UART_CAP_FIFO,
+	// },
+	// [PORT_NPCM] = {
+	// 	.name		= "Nuvoton 16550",
+	// 	.fifo_size	= 16,
+	// 	.tx_loadsz	= 16,
+	// 	.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10 |
+	// 			  UART_FCR_CLEAR_RCVR | UART_FCR_CLEAR_XMIT,
+	// 	.rxtrig_bytes	= {1, 4, 8, 14},
+	// 	.flags		= UART_CAP_FIFO,
+	// },
+	// [PORT_SUNIX] = {
+	// 	.name		= "Sunix",
+	// 	.fifo_size	= 128,
+	// 	.tx_loadsz	= 128,
+	// 	.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10,
+	// 	.rxtrig_bytes	= {1, 32, 64, 112},
+	// 	.flags		= UART_CAP_FIFO | UART_CAP_SLEEP,
+	// },
 };
 
 /* Uart divisor latch read */
@@ -325,64 +325,6 @@ static void default_serial_dl_write(struct uart_8250_port *up, int value)
 	serial_out(up, UART_DLL, value & 0xff);
 	serial_out(up, UART_DLM, value >> 8 & 0xff);
 }
-
-#ifdef CONFIG_SERIAL_8250_RT288X
-
-/* Au1x00/RT288x UART hardware has a weird register layout */
-static const s8 au_io_in_map[8] = {
-	 0,	/* UART_RX  */
-	 2,	/* UART_IER */
-	 3,	/* UART_IIR */
-	 5,	/* UART_LCR */
-	 6,	/* UART_MCR */
-	 7,	/* UART_LSR */
-	 8,	/* UART_MSR */
-	-1,	/* UART_SCR (unmapped) */
-};
-
-static const s8 au_io_out_map[8] = {
-	 1,	/* UART_TX  */
-	 2,	/* UART_IER */
-	 4,	/* UART_FCR */
-	 5,	/* UART_LCR */
-	 6,	/* UART_MCR */
-	-1,	/* UART_LSR (unmapped) */
-	-1,	/* UART_MSR (unmapped) */
-	-1,	/* UART_SCR (unmapped) */
-};
-
-unsigned int au_serial_in(struct uart_port *p, int offset)
-{
-	if (offset >= ARRAY_SIZE(au_io_in_map))
-		return UINT_MAX;
-	offset = au_io_in_map[offset];
-	if (offset < 0)
-		return UINT_MAX;
-	return __raw_readl(p->membase + (offset << p->regshift));
-}
-
-void au_serial_out(struct uart_port *p, int offset, int value)
-{
-	if (offset >= ARRAY_SIZE(au_io_out_map))
-		return;
-	offset = au_io_out_map[offset];
-	if (offset < 0)
-		return;
-	__raw_writel(value, p->membase + (offset << p->regshift));
-}
-
-/* Au1x00 haven't got a standard divisor latch */
-static int au_serial_dl_read(struct uart_8250_port *up)
-{
-	return __raw_readl(up->port.membase + 0x28);
-}
-
-static void au_serial_dl_write(struct uart_8250_port *up, int value)
-{
-	__raw_writel(value, up->port.membase + 0x28);
-}
-
-#endif
 
 static unsigned int hub6_serial_in(struct uart_port *p, int offset)
 {
@@ -483,7 +425,7 @@ static void set_io_from_upio(struct uart_port *p)
 		p->serial_out = mem16_serial_out;
 		break;
 
-	case UPIO_MEM32:
+	case UPIO_MEM32: /// 8250_dw.c 注册uart_port. this way
 		p->serial_in = mem32_serial_in;
 		p->serial_out = mem32_serial_out;
 		break;
@@ -493,22 +435,13 @@ static void set_io_from_upio(struct uart_port *p)
 		p->serial_out = mem32be_serial_out;
 		break;
 
-#ifdef CONFIG_SERIAL_8250_RT288X
-	case UPIO_AU:
-		p->serial_in = au_serial_in;
-		p->serial_out = au_serial_out;
-		up->dl_read = au_serial_dl_read;
-		up->dl_write = au_serial_dl_write;
-		break;
-#endif
-
 	default:
-		p->serial_in = io_serial_in;
+		p->serial_in = io_serial_in; /// 前三次默认注册uart_port走 this way p->iotype=0
 		p->serial_out = io_serial_out;
 		break;
 	}
 	/* Remember loaded iotype */
-	up->cur_iotype = p->iotype;
+	up->cur_iotype = p->iotype; /// p->iotype=0
 	p->handle_irq = serial8250_default_handle_irq;
 }
 
@@ -740,74 +673,74 @@ static void serial8250_set_sleep(struct uart_8250_port *p, int sleep)
 	serial8250_rpm_put(p);
 }
 
-#ifdef CONFIG_SERIAL_8250_RSA
-/*
- * Attempts to turn on the RSA FIFO.  Returns zero on failure.
- * We set the port uart clock rate if we succeed.
- */
-static int __enable_rsa(struct uart_8250_port *up)
-{
-	unsigned char mode;
-	int result;
+// #ifdef CONFIG_SERIAL_8250_RSA
+// /*
+//  * Attempts to turn on the RSA FIFO.  Returns zero on failure.
+//  * We set the port uart clock rate if we succeed.
+//  */
+// static int __enable_rsa(struct uart_8250_port *up)
+// {
+// 	unsigned char mode;
+// 	int result;
 
-	mode = serial_in(up, UART_RSA_MSR);
-	result = mode & UART_RSA_MSR_FIFO;
+// 	mode = serial_in(up, UART_RSA_MSR);
+// 	result = mode & UART_RSA_MSR_FIFO;
 
-	if (!result) {
-		serial_out(up, UART_RSA_MSR, mode | UART_RSA_MSR_FIFO);
-		mode = serial_in(up, UART_RSA_MSR);
-		result = mode & UART_RSA_MSR_FIFO;
-	}
+// 	if (!result) {
+// 		serial_out(up, UART_RSA_MSR, mode | UART_RSA_MSR_FIFO);
+// 		mode = serial_in(up, UART_RSA_MSR);
+// 		result = mode & UART_RSA_MSR_FIFO;
+// 	}
 
-	if (result)
-		up->port.uartclk = SERIAL_RSA_BAUD_BASE * 16;
+// 	if (result)
+// 		up->port.uartclk = SERIAL_RSA_BAUD_BASE * 16;
 
-	return result;
-}
+// 	return result;
+// }
 
-static void enable_rsa(struct uart_8250_port *up)
-{
-	if (up->port.type == PORT_RSA) {
-		if (up->port.uartclk != SERIAL_RSA_BAUD_BASE * 16) {
-			spin_lock_irq(&up->port.lock);
-			__enable_rsa(up);
-			spin_unlock_irq(&up->port.lock);
-		}
-		if (up->port.uartclk == SERIAL_RSA_BAUD_BASE * 16)
-			serial_out(up, UART_RSA_FRR, 0);
-	}
-}
+// static void enable_rsa(struct uart_8250_port *up)
+// {
+// 	if (up->port.type == PORT_RSA) {
+// 		if (up->port.uartclk != SERIAL_RSA_BAUD_BASE * 16) {
+// 			spin_lock_irq(&up->port.lock);
+// 			__enable_rsa(up);
+// 			spin_unlock_irq(&up->port.lock);
+// 		}
+// 		if (up->port.uartclk == SERIAL_RSA_BAUD_BASE * 16)
+// 			serial_out(up, UART_RSA_FRR, 0);
+// 	}
+// }
 
-/*
- * Attempts to turn off the RSA FIFO.  Returns zero on failure.
- * It is unknown why interrupts were disabled in here.  However,
- * the caller is expected to preserve this behaviour by grabbing
- * the spinlock before calling this function.
- */
-static void disable_rsa(struct uart_8250_port *up)
-{
-	unsigned char mode;
-	int result;
+// /*
+//  * Attempts to turn off the RSA FIFO.  Returns zero on failure.
+//  * It is unknown why interrupts were disabled in here.  However,
+//  * the caller is expected to preserve this behaviour by grabbing
+//  * the spinlock before calling this function.
+//  */
+// static void disable_rsa(struct uart_8250_port *up)
+// {
+// 	unsigned char mode;
+// 	int result;
 
-	if (up->port.type == PORT_RSA &&
-	    up->port.uartclk == SERIAL_RSA_BAUD_BASE * 16) {
-		spin_lock_irq(&up->port.lock);
+// 	if (up->port.type == PORT_RSA &&
+// 	    up->port.uartclk == SERIAL_RSA_BAUD_BASE * 16) {
+// 		spin_lock_irq(&up->port.lock);
 
-		mode = serial_in(up, UART_RSA_MSR);
-		result = !(mode & UART_RSA_MSR_FIFO);
+// 		mode = serial_in(up, UART_RSA_MSR);
+// 		result = !(mode & UART_RSA_MSR_FIFO);
 
-		if (!result) {
-			serial_out(up, UART_RSA_MSR, mode & ~UART_RSA_MSR_FIFO);
-			mode = serial_in(up, UART_RSA_MSR);
-			result = !(mode & UART_RSA_MSR_FIFO);
-		}
+// 		if (!result) {
+// 			serial_out(up, UART_RSA_MSR, mode & ~UART_RSA_MSR_FIFO);
+// 			mode = serial_in(up, UART_RSA_MSR);
+// 			result = !(mode & UART_RSA_MSR_FIFO);
+// 		}
 
-		if (result)
-			up->port.uartclk = SERIAL_RSA_BAUD_BASE_LO * 16;
-		spin_unlock_irq(&up->port.lock);
-	}
-}
-#endif /* CONFIG_SERIAL_8250_RSA */
+// 		if (result)
+// 			up->port.uartclk = SERIAL_RSA_BAUD_BASE_LO * 16;
+// 		spin_unlock_irq(&up->port.lock);
+// 	}
+// }
+// #endif /* CONFIG_SERIAL_8250_RSA */
 
 /*
  * This is a quickie test to see how big the FIFO is.
@@ -1289,14 +1222,14 @@ static void autoconfig(struct uart_8250_port *up)
 		break;
 	}
 
-#ifdef CONFIG_SERIAL_8250_RSA
-	/*
-	 * Only probe for RSA ports if we got the region.
-	 */
-	if (port->type == PORT_16550A && up->probe & UART_PROBE_RSA &&
-	    __enable_rsa(up))
-		port->type = PORT_RSA;
-#endif
+// #ifdef CONFIG_SERIAL_8250_RSA
+// 	/*
+// 	 * Only probe for RSA ports if we got the region.
+// 	 */
+// 	if (port->type == PORT_16550A && up->probe & UART_PROBE_RSA &&
+// 	    __enable_rsa(up))
+// 		port->type = PORT_RSA;
+// #endif
 
 	serial_out(up, UART_LCR, save_lcr);
 
@@ -1311,10 +1244,10 @@ static void autoconfig(struct uart_8250_port *up)
 	/*
 	 * Reset the UART.
 	 */
-#ifdef CONFIG_SERIAL_8250_RSA
-	if (port->type == PORT_RSA)
-		serial_out(up, UART_RSA_FRR, 0);
-#endif
+// #ifdef CONFIG_SERIAL_8250_RSA
+// 	if (port->type == PORT_RSA)
+// 		serial_out(up, UART_RSA_FRR, 0);
+// #endif
 	serial8250_out_MCR(up, save_mcr);
 	serial8250_clear_fifos(up);
 	serial_in(up, UART_RX);
@@ -2081,68 +2014,68 @@ static void wait_for_xmitr(struct uart_8250_port *up, int bits)
 	}
 }
 
-#ifdef CONFIG_CONSOLE_POLL
-/*
- * Console polling routines for writing and reading from the uart while
- * in an interrupt or debug context.
- */
+// #ifdef CONFIG_CONSOLE_POLL
+// /*
+//  * Console polling routines for writing and reading from the uart while
+//  * in an interrupt or debug context.
+//  */
 
-static int serial8250_get_poll_char(struct uart_port *port)
-{
-	struct uart_8250_port *up = up_to_u8250p(port);
-	unsigned char lsr;
-	int status;
+// static int serial8250_get_poll_char(struct uart_port *port)
+// {
+// 	struct uart_8250_port *up = up_to_u8250p(port);
+// 	unsigned char lsr;
+// 	int status;
 
-	serial8250_rpm_get(up);
+// 	serial8250_rpm_get(up);
 
-	lsr = serial_port_in(port, UART_LSR);
+// 	lsr = serial_port_in(port, UART_LSR);
 
-	if (!(lsr & UART_LSR_DR)) {
-		status = NO_POLL_CHAR;
-		goto out;
-	}
+// 	if (!(lsr & UART_LSR_DR)) {
+// 		status = NO_POLL_CHAR;
+// 		goto out;
+// 	}
 
-	status = serial_port_in(port, UART_RX);
-out:
-	serial8250_rpm_put(up);
-	return status;
-}
+// 	status = serial_port_in(port, UART_RX);
+// out:
+// 	serial8250_rpm_put(up);
+// 	return status;
+// }
 
 
-static void serial8250_put_poll_char(struct uart_port *port,
-			 unsigned char c)
-{
-	unsigned int ier;
-	struct uart_8250_port *up = up_to_u8250p(port);
+// static void serial8250_put_poll_char(struct uart_port *port,
+// 			 unsigned char c)
+// {
+// 	unsigned int ier;
+// 	struct uart_8250_port *up = up_to_u8250p(port);
 
-	serial8250_rpm_get(up);
-	/*
-	 *	First save the IER then disable the interrupts
-	 */
-	ier = serial_port_in(port, UART_IER);
-	if (up->capabilities & UART_CAP_UUE)
-		serial_port_out(port, UART_IER, UART_IER_UUE);
-	else
-		serial_port_out(port, UART_IER, 0);
+// 	serial8250_rpm_get(up);
+// 	/*
+// 	 *	First save the IER then disable the interrupts
+// 	 */
+// 	ier = serial_port_in(port, UART_IER);
+// 	if (up->capabilities & UART_CAP_UUE)
+// 		serial_port_out(port, UART_IER, UART_IER_UUE);
+// 	else
+// 		serial_port_out(port, UART_IER, 0);
 
-	wait_for_xmitr(up, BOTH_EMPTY);
-	/*
-	 *	Send the character out.
-	 */
-	serial_port_out(port, UART_TX, c);
+// 	wait_for_xmitr(up, BOTH_EMPTY);
+// 	/*
+// 	 *	Send the character out.
+// 	 */
+// 	serial_port_out(port, UART_TX, c);
 
-	/*
-	 *	Finally, wait for transmitter to become empty
-	 *	and restore the IER
-	 */
-	wait_for_xmitr(up, BOTH_EMPTY);
-	serial_port_out(port, UART_IER, ier);
-	serial8250_rpm_put(up);
-}
+// 	/*
+// 	 *	Finally, wait for transmitter to become empty
+// 	 *	and restore the IER
+// 	 */
+// 	wait_for_xmitr(up, BOTH_EMPTY);
+// 	serial_port_out(port, UART_IER, ier);
+// 	serial8250_rpm_put(up);
+// }
 
-#endif /* CONFIG_CONSOLE_POLL */
+// #endif /* CONFIG_CONSOLE_POLL */
 
-int serial8250_do_startup(struct uart_port *port)
+int serial8250_do_startup(struct uart_port *port) /// 这边启动没跑进来
 {
 	struct uart_8250_port *up = up_to_u8250p(port);
 	unsigned long flags;
@@ -2161,48 +2094,48 @@ int serial8250_do_startup(struct uart_port *port)
 		set_io_from_upio(port);
 
 	serial8250_rpm_get(up);
-	if (port->type == PORT_16C950) {
-		/* Wake up and initialize UART */
-		up->acr = 0;
-		serial_port_out(port, UART_LCR, UART_LCR_CONF_MODE_B);
-		serial_port_out(port, UART_EFR, UART_EFR_ECB);
-		serial_port_out(port, UART_IER, 0);
-		serial_port_out(port, UART_LCR, 0);
-		serial_icr_write(up, UART_CSR, 0); /* Reset the UART */
-		serial_port_out(port, UART_LCR, UART_LCR_CONF_MODE_B);
-		serial_port_out(port, UART_EFR, UART_EFR_ECB);
-		serial_port_out(port, UART_LCR, 0);
-	}
+	// if (port->type == PORT_16C950) {
+	// 	/* Wake up and initialize UART */
+	// 	up->acr = 0;
+	// 	serial_port_out(port, UART_LCR, UART_LCR_CONF_MODE_B);
+	// 	serial_port_out(port, UART_EFR, UART_EFR_ECB);
+	// 	serial_port_out(port, UART_IER, 0);
+	// 	serial_port_out(port, UART_LCR, 0);
+	// 	serial_icr_write(up, UART_CSR, 0); /* Reset the UART */
+	// 	serial_port_out(port, UART_LCR, UART_LCR_CONF_MODE_B);
+	// 	serial_port_out(port, UART_EFR, UART_EFR_ECB);
+	// 	serial_port_out(port, UART_LCR, 0);
+	// }
 
-	if (port->type == PORT_DA830) {
-		/* Reset the port */
-		serial_port_out(port, UART_IER, 0);
-		serial_port_out(port, UART_DA830_PWREMU_MGMT, 0);
-		mdelay(10);
+	// if (port->type == PORT_DA830) {
+	// 	/* Reset the port */
+	// 	serial_port_out(port, UART_IER, 0);
+	// 	serial_port_out(port, UART_DA830_PWREMU_MGMT, 0);
+	// 	mdelay(10);
 
-		/* Enable Tx, Rx and free run mode */
-		serial_port_out(port, UART_DA830_PWREMU_MGMT,
-				UART_DA830_PWREMU_MGMT_UTRST |
-				UART_DA830_PWREMU_MGMT_URRST |
-				UART_DA830_PWREMU_MGMT_FREE);
-	}
+	// 	/* Enable Tx, Rx and free run mode */
+	// 	serial_port_out(port, UART_DA830_PWREMU_MGMT,
+	// 			UART_DA830_PWREMU_MGMT_UTRST |
+	// 			UART_DA830_PWREMU_MGMT_URRST |
+	// 			UART_DA830_PWREMU_MGMT_FREE);
+	// }
 
-	if (port->type == PORT_NPCM) {
-		/*
-		 * Nuvoton calls the scratch register 'UART_TOR' (timeout
-		 * register). Enable it, and set TIOC (timeout interrupt
-		 * comparator) to be 0x20 for correct operation.
-		 */
-		serial_port_out(port, UART_NPCM_TOR, UART_NPCM_TOIE | 0x20);
-	}
+	// if (port->type == PORT_NPCM) {
+	// 	/*
+	// 	 * Nuvoton calls the scratch register 'UART_TOR' (timeout
+	// 	 * register). Enable it, and set TIOC (timeout interrupt
+	// 	 * comparator) to be 0x20 for correct operation.
+	// 	 */
+	// 	serial_port_out(port, UART_NPCM_TOR, UART_NPCM_TOIE | 0x20);
+	// }
 
-#ifdef CONFIG_SERIAL_8250_RSA
-	/*
-	 * If this is an RSA port, see if we can kick it up to the
-	 * higher speed clock.
-	 */
-	enable_rsa(up);
-#endif
+// #ifdef CONFIG_SERIAL_8250_RSA
+// 	/*
+// 	 * If this is an RSA port, see if we can kick it up to the
+// 	 * higher speed clock.
+// 	 */
+// 	enable_rsa(up);
+// #endif
 
 	/*
 	 * Clear the FIFO buffers and disable them.
@@ -2233,39 +2166,39 @@ int serial8250_do_startup(struct uart_port *port)
 	/*
 	 * For a XR16C850, we need to set the trigger levels
 	 */
-	if (port->type == PORT_16850) {
-		unsigned char fctr;
+	// if (port->type == PORT_16850) {
+	// 	unsigned char fctr;
 
-		serial_out(up, UART_LCR, UART_LCR_CONF_MODE_B);
+	// 	serial_out(up, UART_LCR, UART_LCR_CONF_MODE_B);
 
-		fctr = serial_in(up, UART_FCTR) & ~(UART_FCTR_RX|UART_FCTR_TX);
-		serial_port_out(port, UART_FCTR,
-				fctr | UART_FCTR_TRGD | UART_FCTR_RX);
-		serial_port_out(port, UART_TRG, UART_TRG_96);
-		serial_port_out(port, UART_FCTR,
-				fctr | UART_FCTR_TRGD | UART_FCTR_TX);
-		serial_port_out(port, UART_TRG, UART_TRG_96);
+	// 	fctr = serial_in(up, UART_FCTR) & ~(UART_FCTR_RX|UART_FCTR_TX);
+	// 	serial_port_out(port, UART_FCTR,
+	// 			fctr | UART_FCTR_TRGD | UART_FCTR_RX);
+	// 	serial_port_out(port, UART_TRG, UART_TRG_96);
+	// 	serial_port_out(port, UART_FCTR,
+	// 			fctr | UART_FCTR_TRGD | UART_FCTR_TX);
+	// 	serial_port_out(port, UART_TRG, UART_TRG_96);
 
-		serial_port_out(port, UART_LCR, 0);
-	}
+	// 	serial_port_out(port, UART_LCR, 0);
+	// }
 
 	/*
 	 * For the Altera 16550 variants, set TX threshold trigger level.
 	 */
-	if (((port->type == PORT_ALTR_16550_F32) ||
-	     (port->type == PORT_ALTR_16550_F64) ||
-	     (port->type == PORT_ALTR_16550_F128)) && (port->fifosize > 1)) {
-		/* Bounds checking of TX threshold (valid 0 to fifosize-2) */
-		if ((up->tx_loadsz < 2) || (up->tx_loadsz > port->fifosize)) {
-			dev_err(port->dev, "TX FIFO Threshold errors, skipping\n");
-		} else {
-			serial_port_out(port, UART_ALTR_AFR,
-					UART_ALTR_EN_TXFIFO_LW);
-			serial_port_out(port, UART_ALTR_TX_LOW,
-					port->fifosize - up->tx_loadsz);
-			port->handle_irq = serial8250_tx_threshold_handle_irq;
-		}
-	}
+	// if (((port->type == PORT_ALTR_16550_F32) ||
+	//      (port->type == PORT_ALTR_16550_F64) ||
+	//      (port->type == PORT_ALTR_16550_F128)) && (port->fifosize > 1)) {
+	// 	/* Bounds checking of TX threshold (valid 0 to fifosize-2) */
+	// 	if ((up->tx_loadsz < 2) || (up->tx_loadsz > port->fifosize)) {
+	// 		dev_err(port->dev, "TX FIFO Threshold errors, skipping\n");
+	// 	} else {
+	// 		serial_port_out(port, UART_ALTR_AFR,
+	// 				UART_ALTR_EN_TXFIFO_LW);
+	// 		serial_port_out(port, UART_ALTR_TX_LOW,
+	// 				port->fifosize - up->tx_loadsz);
+	// 		port->handle_irq = serial8250_tx_threshold_handle_irq;
+	// 	}
+	// }
 
 	/* Check if we need to have shared IRQs */
 	if (port->irq && (up->port.flags & UPF_SHARE_IRQ))
@@ -2467,12 +2400,12 @@ void serial8250_do_shutdown(struct uart_port *port)
 			serial_port_in(port, UART_LCR) & ~UART_LCR_SBC);
 	serial8250_clear_fifos(up);
 
-#ifdef CONFIG_SERIAL_8250_RSA
-	/*
-	 * Reset the RSA board back to 115kbps compat mode.
-	 */
-	disable_rsa(up);
-#endif
+// #ifdef CONFIG_SERIAL_8250_RSA
+// 	/*
+// 	 * Reset the RSA board back to 115kbps compat mode.
+// 	 */
+// 	disable_rsa(up);
+// #endif
 
 	/*
 	 * Read data port to reset things, and then unlink from
@@ -2848,7 +2781,7 @@ static void
 serial8250_set_termios(struct uart_port *port, struct ktermios *termios,
 		       struct ktermios *old)
 {
-	if (port->set_termios)
+	if (port->set_termios) /// 先检查8250_dw.c 下层driver是否实现了uart_port->set_termios
 		port->set_termios(port, termios, old);
 	else
 		serial8250_do_set_termios(port, termios, old);
@@ -3217,10 +3150,10 @@ static const struct uart_ops serial8250_pops = {
 	.request_port	= serial8250_request_port,
 	.config_port	= serial8250_config_port,
 	.verify_port	= serial8250_verify_port,
-#ifdef CONFIG_CONSOLE_POLL
-	.poll_get_char = serial8250_get_poll_char,
-	.poll_put_char = serial8250_put_poll_char,
-#endif
+// #ifdef CONFIG_CONSOLE_POLL
+// 	.poll_get_char = serial8250_get_poll_char,
+// 	.poll_put_char = serial8250_put_poll_char,
+// #endif
 };
 
 void serial8250_init_port(struct uart_8250_port *up)
@@ -3239,26 +3172,26 @@ void serial8250_set_defaults(struct uart_8250_port *up)
 {
 	struct uart_port *port = &up->port;
 
-	if (up->port.flags & UPF_FIXED_TYPE) {
-		unsigned int type = up->port.type;
+	// if (up->port.flags & UPF_FIXED_TYPE) { /// skip 8250_dw 和 core都没指定这个属性
+	// 	unsigned int type = up->port.type;
 
-		if (!up->port.fifosize)
-			up->port.fifosize = uart_config[type].fifo_size;
-		if (!up->tx_loadsz)
-			up->tx_loadsz = uart_config[type].tx_loadsz;
-		if (!up->capabilities)
-			up->capabilities = uart_config[type].flags;
-	}
+	// 	if (!up->port.fifosize)
+	// 		up->port.fifosize = uart_config[type].fifo_size;
+	// 	if (!up->tx_loadsz)
+	// 		up->tx_loadsz = uart_config[type].tx_loadsz;
+	// 	if (!up->capabilities)
+	// 		up->capabilities = uart_config[type].flags;
+	// }
 
 	set_io_from_upio(port);
 
 	/* default dma handlers */
-	if (up->dma) {
-		if (!up->dma->tx_dma)
-			up->dma->tx_dma = serial8250_tx_dma;
-		if (!up->dma->rx_dma)
-			up->dma->rx_dma = serial8250_rx_dma;
-	}
+	// if (up->dma) { /// 应该都没指定
+	// 	if (!up->dma->tx_dma)
+	// 		up->dma->tx_dma = serial8250_tx_dma;
+	// 	if (!up->dma->rx_dma)
+	// 		up->dma->rx_dma = serial8250_rx_dma;
+	// }
 }
 EXPORT_SYMBOL_GPL(serial8250_set_defaults);
 

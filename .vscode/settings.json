@@ -3,6 +3,11 @@
         "*.S": "c",
         "i2c-designware-core.h": "c",
         "i2c.h": "c",
-        "atomic": "c"
+        "atomic": "c",
+        "*.tcc": "c",
+        "istream": "c",
+        "sstream": "c",
+        "streambuf": "c",
+        "functional": "c"
     }
 }
