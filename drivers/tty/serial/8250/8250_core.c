@@ -733,15 +733,15 @@ void serial8250_resume_port(int line)
 
 	up->canary = 0;
 
-	if (up->capabilities & UART_NATSEMI) {
-		/* Ensure it's still in high speed mode */
-		serial_port_out(port, UART_LCR, 0xE0);
+	// if (up->capabilities & UART_NATSEMI) {
+	// 	/* Ensure it's still in high speed mode */
+	// 	serial_port_out(port, UART_LCR, 0xE0);
 
-		ns16550a_goto_highspeed(up);
+	// 	ns16550a_goto_highspeed(up);
 
-		serial_port_out(port, UART_LCR, 0);
-		port->uartclk = 921600*16;
-	}
+	// 	serial_port_out(port, UART_LCR, 0);
+	// 	port->uartclk = 921600*16;
+	// }
 	uart_resume_port(&serial8250_reg, port);
 }
 EXPORT_SYMBOL(serial8250_resume_port);

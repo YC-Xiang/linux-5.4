@@ -97,7 +97,7 @@ void dw8250_setup_port(struct uart_port *p)
 	reg = dw8250_readl_ext(p, DW_UART_DLF);
 	dw8250_writel_ext(p, DW_UART_DLF, 0);
 
-	if (reg) { /// reg应该是0
+	if (reg) { /// reg:0
 		struct dw8250_port_data *d = p->private_data;
 
 		d->dlf_size = fls(reg);
@@ -105,22 +105,22 @@ void dw8250_setup_port(struct uart_port *p)
 		p->set_divisor = dw8250_set_divisor;
 	}
 
-	reg = dw8250_readl_ext(p, DW_UART_CPR); /// reg应该是0
+	reg = dw8250_readl_ext(p, DW_UART_CPR); /// reg:0
 	if (!reg)
 		return;
 
 	/* Select the type based on FIFO */
-	if (reg & DW_UART_CPR_FIFO_MODE) {
+	if (reg & DW_UART_CPR_FIFO_MODE) { /// skip
 		p->type = PORT_16550A;
 		p->flags |= UPF_FIXED_TYPE;
 		p->fifosize = DW_UART_CPR_FIFO_SIZE(reg);
 		up->capabilities = UART_CAP_FIFO;
 	}
 
-	if (reg & DW_UART_CPR_AFCE_MODE)
+	if (reg & DW_UART_CPR_AFCE_MODE) /// skip
 		up->capabilities |= UART_CAP_AFE;
 
-	if (reg & DW_UART_CPR_SIR_MODE)
+	if (reg & DW_UART_CPR_SIR_MODE) /// skip
 		up->capabilities |= UART_CAP_IRDA;
 }
 EXPORT_SYMBOL_GPL(dw8250_setup_port);

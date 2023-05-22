@@ -164,16 +164,16 @@ static inline int serial8250_TIOCM_to_MCR(int tiocm)
 {
 	int mcr = 0;
 
-	if (tiocm & TIOCM_RTS)
-		mcr |= UART_MCR_RTS;
-	if (tiocm & TIOCM_DTR)
-		mcr |= UART_MCR_DTR;
-	if (tiocm & TIOCM_OUT1)
-		mcr |= UART_MCR_OUT1;
-	if (tiocm & TIOCM_OUT2)
-		mcr |= UART_MCR_OUT2;
-	if (tiocm & TIOCM_LOOP)
-		mcr |= UART_MCR_LOOP;
+	if (tiocm & TIOCM_RTS) /// 0x4
+		mcr |= UART_MCR_RTS; /// 0x2
+	if (tiocm & TIOCM_DTR) /// 0x2
+		mcr |= UART_MCR_DTR; /// 0x1
+	if (tiocm & TIOCM_OUT1) /// 0x2000
+		mcr |= UART_MCR_OUT1; /// 0x4
+	if (tiocm & TIOCM_OUT2) /// 0x4000
+		mcr |= UART_MCR_OUT2;/// 0x8
+	if (tiocm & TIOCM_LOOP) /// 0x8000
+		mcr |= UART_MCR_LOOP;/// 0x10
 
 	return mcr;
 }
@@ -322,22 +322,22 @@ static inline int serial8250_request_dma(struct uart_8250_port *p)
 static inline void serial8250_release_dma(struct uart_8250_port *p) { }
 #endif
 
-static inline int ns16550a_goto_highspeed(struct uart_8250_port *up)
-{
-	unsigned char status;
+// static inline int ns16550a_goto_highspeed(struct uart_8250_port *up)
+// {
+// 	unsigned char status;
 
-	status = serial_in(up, 0x04); /* EXCR2 */
-#define PRESL(x) ((x) & 0x30)
-	if (PRESL(status) == 0x10) {
-		/* already in high speed mode */
-		return 0;
-	} else {
-		status &= ~0xB0; /* Disable LOCK, mask out PRESL[01] */
-		status |= 0x10;  /* 1.625 divisor for baud_base --> 921600 */
-		serial_out(up, 0x04, status);
-	}
-	return 1;
-}
+// 	status = serial_in(up, 0x04); /* EXCR2 */
+// #define PRESL(x) ((x) & 0x30)
+// 	if (PRESL(status) == 0x10) {
+// 		/* already in high speed mode */
+// 		return 0;
+// 	} else {
+// 		status &= ~0xB0; /* Disable LOCK, mask out PRESL[01] */
+// 		status |= 0x10;  /* 1.625 divisor for baud_base --> 921600 */
+// 		serial_out(up, 0x04, status);
+// 	}
+// 	return 1;
+// }
 
 static inline int serial_index(struct uart_port *port)
 {

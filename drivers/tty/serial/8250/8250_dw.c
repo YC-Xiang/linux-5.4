@@ -91,11 +91,11 @@ static void dw8250_check_lcr(struct uart_port *p, int value)
 
 		dw8250_force_idle(p);
 
-#ifdef CONFIG_64BIT
-		if (p->type == PORT_OCTEON)
-			__raw_writeq(value & 0xff, offset);
-		else
-#endif
+// #ifdef CONFIG_64BIT
+// 		if (p->type == PORT_OCTEON)
+// 			__raw_writeq(value & 0xff, offset);
+// 		else
+// #endif
 		if (p->iotype == UPIO_MEM32)
 			writel(value, offset);
 		else if (p->iotype == UPIO_MEM32BE)
@@ -237,17 +237,17 @@ static int dw8250_handle_irq(struct uart_port *p)
 	return 0;
 }
 
-// static void
-// dw8250_do_pm(struct uart_port *port, unsigned int state, unsigned int old)
-// {
-// 	if (!state)
-// 		pm_runtime_get_sync(port->dev);
+static void
+dw8250_do_pm(struct uart_port *port, unsigned int state, unsigned int old)
+{
+	if (!state)
+		pm_runtime_get_sync(port->dev);
 
-// 	serial8250_do_pm(port, state, old);
+	serial8250_do_pm(port, state, old);
 
-// 	if (state)
-// 		pm_runtime_put_sync_suspend(port->dev);
-// }
+	if (state)
+		pm_runtime_put_sync_suspend(port->dev);
+}
 
 static void dw8250_set_termios(struct uart_port *p, struct ktermios *termios,
 			       struct ktermios *old)
@@ -286,14 +286,14 @@ static void dw8250_set_ldisc(struct uart_port *p, struct ktermios *termios)
 	struct uart_8250_port *up = up_to_u8250p(p);
 	unsigned int mcr = p->serial_in(p, UART_MCR);
 
-	if (up->capabilities & UART_CAP_IRDA) {
-		if (termios->c_line == N_IRDA)
-			mcr |= DW_UART_MCR_SIRE;
-		else
-			mcr &= ~DW_UART_MCR_SIRE;
+	// if (up->capabilities & UART_CAP_IRDA) { /// 看起来没有设置过up->capabilities跳过
+	// 	if (termios->c_line == N_IRDA)
+	// 		mcr |= DW_UART_MCR_SIRE;
+	// 	else
+	// 		mcr &= ~DW_UART_MCR_SIRE;
 
-		p->serial_out(p, UART_MCR, mcr);
-	}
+	// 	p->serial_out(p, UART_MCR, mcr);
+	// }
 	serial8250_do_set_ldisc(p, termios);
 }
 
@@ -305,10 +305,10 @@ static void dw8250_set_ldisc(struct uart_port *p, struct ktermios *termios)
  * REVISIT: This is a work around for limitation in the DMA Engine API. Once the
  * core problem is fixed, this function is no longer needed.
  */
-// static bool dw8250_fallback_dma_filter(struct dma_chan *chan, void *param)
-// {
-// 	return false;
-// }
+static bool dw8250_fallback_dma_filter(struct dma_chan *chan, void *param)
+{
+	return false;
+}
 
 // static bool dw8250_idma_filter(struct dma_chan *chan, void *param)
 // {
@@ -367,15 +367,15 @@ static void dw8250_probe_plat(struct uart_port *p,
 	if (!pdata)
 		return;
 
-	p->type = pdata->type;
-	p->flags = pdata->flags;
-	p->uartclk = pdata->uartclk;
-	p->iotype = pdata->iotype;
-	if (p->iotype == UPIO_MEM32) {
-		p->serial_in = dw8250_serial_in32;
-		p->serial_out = dw8250_serial_out32;
-	}
-	p->regshift = pdata->regshift;
+	// p->type = pdata->type; /// skip
+	// p->flags = pdata->flags;
+	// p->uartclk = pdata->uartclk;
+	// p->iotype = pdata->iotype;
+	// if (p->iotype == UPIO_MEM32) {
+	// 	p->serial_in = dw8250_serial_in32;
+	// 	p->serial_out = dw8250_serial_out32;
+	// }
+	// p->regshift = pdata->regshift;
 }
 
 static int dw8250_probe(struct platform_device *pdev)
@@ -404,13 +404,13 @@ static int dw8250_probe(struct platform_device *pdev)
 	p->mapbase	= regs->start;
 	p->irq		= irq;
 	p->handle_irq	= dw8250_handle_irq;
-	//p->pm		= dw8250_do_pm;
+	p->pm		= dw8250_do_pm;
 	p->type		= PORT_8250;
 	p->flags	= UPF_SHARE_IRQ | UPF_FIXED_PORT;
 	p->dev		= dev;
-	p->iotype	= UPIO_MEM;
-	p->serial_in	= dw8250_serial_in; /// 最底层的uart read函数
-	p->serial_out	= dw8250_serial_out; /// 最底层的uart write函数
+	p->iotype	= UPIO_MEM; /// 在下面被替换
+	p->serial_in	= dw8250_serial_in; /// 读寄存器函数
+	p->serial_out	= dw8250_serial_out; /// 写寄存器函数
 	p->set_ldisc	= dw8250_set_ldisc;
 	p->set_termios	= dw8250_set_termios; /// 在dw8250_quirks中又p->set_termios=NULL
 
