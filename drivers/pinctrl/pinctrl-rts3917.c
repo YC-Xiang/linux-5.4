@@ -1827,8 +1827,8 @@ static void rts_gpio_irq_disable(struct irq_data *data)
 
 	spin_lock_irqsave(&rtspc->irq_lock, flags);
 	if (gpio < RTS_MAX_NGPIO) {
-		rts_clr_reg_bit(gpio, rtspc->addr + (int)&(regs->gpio_int_en));
-		rts_clr_reg_bit(gpio + bs,
+		rts_clr_reg_bit(gpio, rtspc->addr + (int)&(regs->gpio_int_en)); /// ???这边gpio应该是bf?
+		rts_clr_reg_bit(gpio + bs, /// ???这边gpio应该是bf?
 				rtspc->addr + (int)&(regs->gpio_int_en));
 	}
 	spin_unlock_irqrestore(&rtspc->irq_lock, flags);
@@ -2020,7 +2020,7 @@ static int rts_pinctrl_probe(struct platform_device *pdev)
 		err = rtspc->irq;
 		goto unmap_res;
 	}
-    /// 把gpio controller抽象成一个虚拟的interruput controller，hw interrupt id就是gpio_numbers。
+    /// 把gpio controller抽象成一个虚拟的interruput controller，hw interrupt id对应gpio_numbers。
     /// 相当于两个interrupt controller级联，上层共用一个中断号rtspc->irq，下面还有gpio_numbers个虚拟出来的中断号。
 	rtspc->irq_domain = irq_domain_add_linear(NULL, gpio_numbers, /// 注册irq_domain
 						  &irq_domain_simple_ops, NULL);
@@ -2040,7 +2040,7 @@ static int rts_pinctrl_probe(struct platform_device *pdev)
 		irq_set_chip_data(gpioirq, rtspc); /// 设置desc->irq_data.chip_data = rtspc;
 	}
 
-	err = request_irq(rtspc->irq, rts_irq_handler,
+	err = request_irq(rtspc->irq, rts_irq_handler, /// 中断来了会先进handle_simple_irq，再进rts_irq_handler
 			  IRQF_SHARED, "gpio", (void *)rtspc);
 	if (err) {
 		dev_err(dev, "failure requesting irq %i\n", rtspc->irq);

@@ -150,7 +150,7 @@ static int plic_set_affinity(struct irq_data *d,
 }
 #endif
 
-static void plic_irq_eoi(struct irq_data *d)
+static void plic_irq_eoi(struct irq_data *d) /// ???eoi:end of interrupt?
 {
 	struct plic_handler *handler = this_cpu_ptr(&plic_handlers);
 
@@ -167,7 +167,7 @@ static struct irq_chip plic_chip = {
 	.name		= "Realtek PLIC",
 	.irq_mask	= plic_irq_mask,
 	.irq_unmask	= plic_irq_unmask,
-	.irq_eoi	= plic_irq_eoi,
+	.irq_eoi	= plic_irq_eoi, /// 让CPU可以通知interrupt controller，它已经处理完一个中断
 #ifdef CONFIG_SMP
 	.irq_set_affinity = plic_set_affinity,
 #endif
@@ -177,7 +177,8 @@ static int plic_irqdomain_map(struct irq_domain *d, unsigned int irq,
 			      irq_hw_number_t hwirq)
 {
 	struct plic_priv *priv = d->host_data;
-
+	/// 这里用irq_domain_set_info，调用到__irq_set_handler(virq, handler, 0, handler_name);
+	/// 注意到is_chained为0，但我们是第二级的interrupt controller.
 	irq_domain_set_info(d, irq, hwirq, &plic_chip, d->host_data,
 			    handle_fasteoi_irq, NULL, NULL);
 	irq_set_noprobe(irq);
@@ -239,7 +240,7 @@ static void plic_handle_irq(struct irq_desc *desc)
 			generic_handle_irq(irq);
 	}
 
-	chained_irq_exit(chip, desc);
+	chained_irq_exit(chip, desc); /// 级联的第二级中断处理函数需要
 }
 
 static void plic_set_threshold(struct plic_handler *handler, u32 threshold)
@@ -289,7 +290,7 @@ static int __init plic_init(struct device_node *node,
 	}
 
 	error = -EINVAL;
-	of_property_read_u32(node, "riscv,ndev", &nr_irqs);
+	of_property_read_u32(node, "riscv,ndev", &nr_irqs); /// 128
 	if (WARN_ON(!nr_irqs))
 		goto out_iounmap;
 
