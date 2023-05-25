@@ -20,6 +20,8 @@
  *   No. 128, West Shenhu Road, Suzhou Industry Park, Suzhou, China
  */
 
+/// BUG: line 1138 1839
+
 #include <linux/bitmap.h>
 #include <linux/bug.h>
 #include <linux/delay.h>
@@ -1111,10 +1113,10 @@ static int rts_gpio_enable(struct gpio_chip *chip, unsigned int gpio)
 		break;
 	case GPIO_TYPE_SDIO0:
 	case GPIO_TYPE_SDIO1:
-		if (gpio == 36 || gpio == 44)
+		if (gpio == 38 || gpio == 46)
 			rts_gpio_set_field(rtspc->addr + (int)&(regs->pad_cfg),
 					   1, 2, 4);
-		else if (gpio == 37 || gpio == 45)
+		else if (gpio == 39 || gpio == 47)
 			rts_gpio_set_field(rtspc->addr + (int)&(regs->pad_cfg),
 					   1, 2, 2);
 		else
@@ -1127,6 +1129,13 @@ static int rts_gpio_enable(struct gpio_chip *chip, unsigned int gpio)
 		rts_gpio_set_field(rtspc->addr + (int)&(regs->pad_cfg),
 				   2, 4, bf << 2);
 		break;
+	/// bf=0,1 -> bf=0 bit[3:0]
+	/// bf=2,3 -> bf=1 bit[7:4]
+	/// bf=4,5 -> bf=2 bit[11:8]
+	/// bf=6,7 -> bf=4 bit[19:16] 因为video bit[15:12]没有GPIO功能，所以从这边开始bf++
+	/// bf=8,9 -> bf=5 bit[23:20]
+	/// bf=10,11 -> bf=6 bit[27:24]
+	/// bf=12 -> bf=6 bit[27:24] ??? 为什么bf=12 最后一个pin要设置为bf=11,最后config到bit[27:24]。这里是3915遗留的问题,3915中最后一个pin也在bit[27:24]config，3917没有改正。
 	case GPIO_TYPE_SSOR:
 		if (bf >= 11)
 			bf = 11;
@@ -1860,7 +1869,7 @@ static int rts_gpio_irq_set_wake(struct irq_data *data, unsigned int on)
 	struct rts_pinctrl *rtspc = irq_data_get_irq_chip_data(data);
 	unsigned long flags;
 
-	spin_lock_irqsave(&rtspc->irq_lock, flags);
+	spin_lock_irqsave(&rtspc->irq_lock, flags); /// ??? 为什么要使用spin_lock_irqsave? 这里是临界区吗?还有spin_lock, spin_lock_irq等API如何选择?
 
 	if (on)
 		rts_gpio_irq_enable(data);
@@ -2119,7 +2128,7 @@ static int rts_pinctrl_suspend(struct platform_device *pdev, pm_message_t state)
 	struct device *dev = &pdev->dev;
 
 	if (device_may_wakeup(dev))
-		enable_irq_wake(rtspc->irq);
+		enable_irq_wake(rtspc->irq); /// 调用到desc->irq_data.chip->irq_set_wake. 即rts_gpio_irq_set_wake
 
 	return 0;
 }
