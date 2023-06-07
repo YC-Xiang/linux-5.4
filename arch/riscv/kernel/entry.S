@@ -142,7 +142,7 @@ skip_context_tracking:
 	beq s4, t0, handle_syscall /// 如果xCAUSE的值等于EXC_SYSCALL(8)，为ecall from U-mode. 是system call
 
 	/* Handle other exceptions */
-	slli t0, s4, RISCV_LGPTR
+	slli t0, s4, RISCV_LGPTR /// s4 << RISCV_LGPTR 即 cause << 2, excp_vect_table + cause << 2, 对应不同异常的地址
 	la t1, excp_vect_table
 	la t2, excp_vect_table_end
 	move a0, sp /* pt_regs */

@@ -204,7 +204,7 @@ static const struct dmi_system_id dw_i2c_hwmon_class_dmi[] = {
 
 static int dw_i2c_plat_probe(struct platform_device *pdev)
 {
-	struct dw_i2c_platform_data *pdata = dev_get_platdata(&pdev->dev); // ??? pdata 应该为NULL?
+	struct dw_i2c_platform_data *pdata = dev_get_platdata(&pdev->dev); // ??? pdata 应该为NULL，这里是静态定义device，没有用设备树
 	struct i2c_adapter *adap;
 	struct dw_i2c_dev *dev; /// 私有数据结构
 	struct i2c_timings *t;
@@ -240,15 +240,15 @@ static int dw_i2c_plat_probe(struct platform_device *pdev)
 	if (pdata)
 		t->bus_freq_hz = pdata->i2c_scl_freq;
 	else
-		i2c_parse_fw_timings(&pdev->dev, t, false); // ??? 走这边? 查找设备树获取参数。因为false，设备树有才设置，没有都不使用默认值。
+		i2c_parse_fw_timings(&pdev->dev, t, false); // 走这边 查找设备树获取参数。设备树没定义某参数，跳过。定义了某参数，使用。
 
 	i2c_dw_adjust_bus_speed(dev); /// 没有定义CONFIG_ACPI和bus_freq_hz 则t->bus_freq_hz=I2C_MAX_FAST_MODE_FREQ
 
 	if (pdev->dev.of_node)
 		dw_i2c_of_configure(pdev); /// 跳过 cuz dev->flags = 0
 
-	if (has_acpi_companion(&pdev->dev)) /// 跳过
-		i2c_dw_acpi_configure(&pdev->dev);
+	// if (has_acpi_companion(&pdev->dev)) /// 跳过
+	// 	i2c_dw_acpi_configure(&pdev->dev);
 
 	ret = i2c_dw_validate_speed(dev); /// 检查t->bus_freq_hz
 	if (ret)
