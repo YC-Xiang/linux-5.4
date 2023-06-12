@@ -103,7 +103,7 @@ static inline void mc_set_reg_bit(int bit, u32 offset)
  * rts_set_cxstall
  * EP0 return host stall
  */
-static void rts_set_cxstall(struct rts_udc *rtsusb)
+static void rts_set_cxstall(struct rts_udc *rtsusb) /// ep0设置stall
 {
 	RTS_DEBUG("%s()\n", __func__);
 	usb_set_reg_bit(EP0_STALL_OFFSET, USB_EP_CTL0);
@@ -885,7 +885,7 @@ static int rts_ep0_queue(struct rts_endpoint *priv_ep,
 
 	RTS_DEBUG("%s()\n", __func__);
 
-	if (!priv_req->request.length) {
+	if (!priv_req->request.length) { /// 这里是wLength为0进入，就不需要setup stage中的data传输阶段了
 		rts_done(priv_ep, priv_req, 0);
 		return ret;
 	}
@@ -1223,42 +1223,45 @@ static void rts_usb_req_ep0_get_status(struct rts_udc *rtsusb,
 
 	RTS_DEBUG("%s()\n", __func__);
 
-	switch (ctrl_req->bRequestType & USB_RECIP_MASK) {
-	case USB_RECIP_DEVICE:
-		rtsusb->ep0_data = rtsusb->devstatus;
+	switch (ctrl_req->bRequestType & USB_RECIP_MASK) { /// USB_RECIP_MASK: 0x1f(0001 1111)
+	case USB_RECIP_DEVICE: /// 0x00
+		rtsusb->ep0_data = rtsusb->devstatus; /// 1 << USB_DEVICE_SELF_POWERED. spec中还有remote wakeup
 		break;
-	case USB_RECIP_INTERFACE:
-		rtsusb->ep0_data = 0;
+	case USB_RECIP_INTERFACE: /// 0x01
+		rtsusb->ep0_data = 0; /// spec中interface的status也都是0，符合spec
 		break;
-	case USB_RECIP_ENDPOINT:
-		epnum = ctrl_req->wIndex & USB_ENDPOINT_NUMBER_MASK;
+	case USB_RECIP_ENDPOINT: /// 0x02
+		epnum = ctrl_req->wIndex & USB_ENDPOINT_NUMBER_MASK; /// wIndex是ep的index, bit8表示方向
 		if (epnum) {
 			if (ctrl_req->wIndex & USB_ENDPOINT_DIR_MASK)
 				rtsusb->ep0_data =
-				rts_is_epnstall(rtsusb->ep_in[epnum])
+				rts_is_epnstall(rtsusb->ep_in[epnum]) /// 判断ep_in 是否stall，stall返回1，否则返回0
 						<< USB_ENDPOINT_HALT;
 			else
 				rtsusb->ep0_data =
-				rts_is_epnstall(rtsusb->ep_out[epnum])
+				rts_is_epnstall(rtsusb->ep_out[epnum]) /// 判断ep_out
 						<< USB_ENDPOINT_HALT;
 		} else {
-			rts_set_cxstall(rtsusb);
+			rts_set_cxstall(rtsusb); /// ep0s设置stall
 		}
 		break;
 	default:
 		rts_set_cxstall(rtsusb);
 		return;
 	}
-	rtsusb->ep0_req->buf = &rtsusb->ep0_data;
-	rtsusb->ep0_req->length = 2;
+	rtsusb->ep0_req->buf = &rtsusb->ep0_data; /// Data
+	rtsusb->ep0_req->length = 2; /// wLength
 	rtsusb->ep0_req->zero = 0;
-	rtsusb->ep0_req->complete = rts_ep0_req_complete;
+	rtsusb->ep0_req->complete = rts_ep0_req_complete; /// Function called when request completes
 
 	spin_unlock(&rtsusb->lock);
-	rts_ep_queue(rtsusb->gadget.ep0, rtsusb->ep0_req, GFP_ATOMIC);
+	rts_ep_queue(rtsusb->gadget.ep0, rtsusb->ep0_req, GFP_ATOMIC); ///返回host数据，都保存在了ep0_req
 	spin_lock(&rtsusb->lock);
 }
 
+/// ??? 看起来没有clear wValue对应的feature.
+/// set_feature中有set device test mode这个feature，这边照理应该也要加clear的流程
+/// spec page 252 Note: The Test_Mode feature cannot be cleared by the ClearFeature() request. 所以上面问题解决，代码没问题。
 static void rts_usb_req_ep0_clear_feature(struct rts_udc *rtsusb,
 					  struct usb_ctrlrequest *ctrl_req)
 {
@@ -1281,7 +1284,7 @@ static void rts_usb_req_ep0_clear_feature(struct rts_udc *rtsusb,
 		break;
 	case USB_RECIP_ENDPOINT:
 		if (ctrl_req->wIndex & USB_ENDPOINT_NUMBER_MASK) {
-			if (ep->wedged) {
+			if (ep->wedged) { /// ??? wedged是什么
 				rts_set_cxdone(rtsusb);
 				break;
 			}
@@ -1351,7 +1354,7 @@ static void rts_usb_req_ep0_set_feature(struct rts_udc *rtsusb,
 		rts_set_cxdone(rtsusb);
 		if (ctrl_req->wValue == USB_DEVICE_TEST_MODE) {
 			rtsusb->test_mode = ctrl_req->wIndex >> 8;
-			queue_work(rtsusb->udc_wq, &rtsusb->test_work);
+			queue_work(rtsusb->udc_wq, &rtsusb->test_work); /// 将rts_usb_test_mode加入工作队列
 		}
 		break;
 	case USB_RECIP_INTERFACE:
@@ -1367,7 +1370,7 @@ static void rts_usb_req_ep0_set_feature(struct rts_udc *rtsusb,
 		else
 			ep = rtsusb->ep_out[epnum];
 
-		if (epnum)
+		if (epnum) /// 这边是设置除ep0之外的ep回应stall，但control transfer的setup事务应该只用在ep0吧???用不到
 			rts_set_epnstall(ep);
 		else
 			rts_set_cxstall(rtsusb);
@@ -1387,12 +1390,12 @@ static void rts_set_dev_addr(struct rts_udc *rtsusb, u32 addr)
 	RTS_DEBUG("%s()\n", __func__);
 
 	value |= (addr & 0x7f);
-	if (usb_read_reg(USB_ADDR) & 0x7f) {
+	if (usb_read_reg(USB_ADDR) & 0x7f) { ///USB_ADDR本来有值，应该是在address stage，写入新的address
 		rts_set_cxdone(rtsusb);
 		usb_write_reg(value, USB_ADDR);
 	} else {
-		usb_write_reg(value, USB_ADDR);
-		rts_set_cxdone(rtsusb);
+		usb_write_reg(value, USB_ADDR); /// USB_ADDR无值，应该在default stage，写入address
+		rts_set_cxdone(rtsusb); /// ??? 这两边顺序不同的意义是什么?
 	}
 }
 
@@ -1414,7 +1417,7 @@ static void rts_usb_req_ep0_set_address(struct rts_udc *rtsusb,
 		rtsusb->gadget.speed = USB_SPEED_FULL;
 	}
 
-	if (ctrl_req->wValue >= 0x100)
+	if (ctrl_req->wValue >= 0x100) /// spec中规定不能超过127
 		rts_set_cxstall(rtsusb);
 	else
 		rts_set_dev_addr(rtsusb, ctrl_req->wValue);
@@ -1471,8 +1474,8 @@ static int rts_usb_setup_process(struct rts_udc *rtsusb)
 	RTS_DEBUG("%s()\n", __func__);
 
 	rtsusb->ep_in[0]->dir_in = ctrl->bRequestType & USB_DIR_IN;
-	switch (ctrl->bRequestType & USB_TYPE_MASK) {
-	case USB_TYPE_STANDARD:
+	switch (ctrl->bRequestType & USB_TYPE_MASK) { /// USB_TYPE_MASK: 0x60(0110 0000)
+	case USB_TYPE_STANDARD: /// 0x00
 		ret = rts_usb_ep0_standard_request(rtsusb, ctrl);
 		break;
 	default:
@@ -1532,8 +1535,8 @@ static int rts_usb_ep0_irq(struct rts_udc *rtsusb)
 
 	int_val = (usb_read_reg(USB_IRQ_EN) & usb_read_reg(USB_IRQ_STATUS));
 	RTS_DEBUG("interrupt_val %#x\n", int_val);
-	if (int_val & BIT(I_SETUPF_OFFSET)) {
-		usb_set_reg_bit(I_EP0OUTF_OFFSET, USB_IRQ_STATUS);
+	if (int_val & BIT(I_SETUPF_OFFSET)) { /// setup packet irq
+		usb_set_reg_bit(I_EP0OUTF_OFFSET, USB_IRQ_STATUS); /// clear data packet received irq
 		RTS_DEBUG("\nrecieve setup irq\n");
 
 		rtsusb->setup_buf->bRequestType =
@@ -1923,7 +1926,7 @@ static void rts_usb_se0_irq(struct rts_udc *rtsusb)
 
 	int_val = (usb_read_reg(USB_IRQ_EN) & usb_read_reg(USB_IRQ_STATUS));
 	if (int_val & BIT(I_SE0RSTF_OFFSET)) {
-		usb_set_reg_bit(I_SE0RSTF_OFFSET, USB_IRQ_STATUS);
+		usb_set_reg_bit(I_SE0RSTF_OFFSET, USB_IRQ_STATUS); /// clear irq
 		RTS_DEBUG("\nrecieve se0 irq\n");
 		spin_unlock(&rtsusb->lock);
 		if (rtsusb->gadget_driver)
@@ -1941,7 +1944,7 @@ static int rts_usb_ep_irq(void *dev)
 
 	spin_lock(&rtsusb->lock);
 
-	rts_usb_se0_irq(rtsusb);
+	rts_usb_se0_irq(rtsusb); /// root port reset irq
 
 	rts_usb_ep0_irq(rtsusb);
 
@@ -2633,7 +2636,7 @@ static int rts_usb_driver_probe(struct platform_device *pdev)
 	 */
 	INIT_LIST_HEAD(&rtsusb->gadget.ep_list);
 
-	ret = rts_gadget_init_endpoints(rtsusb);
+	ret = rts_gadget_init_endpoints(rtsusb); /// 初始化endpoints
 	// if (ret) {
 	// 	dev_err(dev, "gadget init endpoints failed\n");
 	// 	goto err_init_ep;
@@ -2647,7 +2650,7 @@ static int rts_usb_driver_probe(struct platform_device *pdev)
 	/*
 	 * initialize usb register
 	 */
-	ret = rts_usb_init(rtsusb);
+	ret = rts_usb_init(rtsusb); /// 写寄存器
 	// if (ret) {
 	// 	dev_err(dev, "rts usb init failed\n");
 	// 	goto err_init_usb;
@@ -2667,7 +2670,7 @@ static int rts_usb_driver_probe(struct platform_device *pdev)
 	// 	goto err;
 	// }
 
-	ret = usb_add_gadget_udc(dev, &rtsusb->gadget);
+	ret = usb_add_gadget_udc(dev, &rtsusb->gadget); /// 注册udc
 	// if (ret) {
 	// 	dev_err(dev, "register udc failed\n");
 	// 	goto err;
