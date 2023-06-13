@@ -2676,7 +2676,7 @@ static int rts_usb_driver_probe(struct platform_device *pdev)
 	// 	goto err;
 	// }
 
-	rtsusb->udc_wq = create_workqueue("udc_wq");
+	rtsusb->udc_wq = create_workqueue("udc_wq"); /// 创建工作队列
 	// if (!rtsusb->udc_wq) {
 	// 	ret = -ENOMEM;
 	// 	goto err;
